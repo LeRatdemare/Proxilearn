@@ -7,3 +7,6 @@ class Exercice(models.Model):
     description = models.TextField()
     difficulty = models.IntegerField()
     category = models.IntegerField()
+
+    def __str__(self):
+        return self.name
