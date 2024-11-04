@@ -1,5 +1,6 @@
 from category import Category
 from difficulty import Difficulty
+import random
 
 class Exercice:
 
@@ -16,24 +17,140 @@ class Exercice:
         return: question sous la forme {str(question), str(solution)}
         """
         question = {"question": str(), "solution": str()}
+        change = [1,2,5,10] #pièces et billets disponibles, on pourra en rajouter plus tard
+        itemEasy = [1,2,5,10] #à lecture directe, c’est-à-dire si une pièce ou un billet de la valeur de ce montant existe
+        itemDifficult = [3,4,6,7,8,9,11,12,13,14,15,16,17,18,19] #combiner plusieurs objet
 
         match self.category:
-            case Category.A:
+            #acheter et payer un objet
+            case Category.TypeM:
                 match self.difficulty:
                     case Difficulty.EASY:
-                        ... # TODO
-                    case Difficulty.MEDIUM:
-                        ... # TODO
+                       price = random.choice(itemEasy)
+                       question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le jeu coûte {price}€."
+                       solution = price                      
+
                     case Difficulty.HARD:
-                        ... # TODO
-            case Category.B:
+                        price = random.choice(itemDifficult)
+                        question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le jeu coûte {price}€."
+                        solution = []
+                        new_price=price
+                        i=len(change)-1
+                        while (new_price > 0 ):
+                            if (new_price-change[i])>=0:
+                                new_price=new_price-change[i]
+                                solution.add(change[i])
+                            else :
+                                i-=1
+                return (question, str(solution)) 
+            
+            #acheter et payer deux objets
+            case Category.TypeMM:
                 match self.difficulty:
                     case Difficulty.EASY:
-                        ... # TODO
-                    case Difficulty.MEDIUM:
-                        ... # TODO
+                       #vérifier la validité du prix, cad si la somme des deux appartient à la liste itemEasy
+                       price_valid = False
+                       while (price_valid == False) :
+                        priceA = random.choice(itemEasy+itemDifficult)
+                        priceB = random.choice(itemEasy+itemDifficult)
+                        if (priceA+priceB) in itemEasy:
+                            price = priceA+priceB
+                            price_valid = True
+
+                       question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."
+                       solution = priceA+priceB                       
+
                     case Difficulty.HARD:
-                        ... # TODO
+                        #vérifier la validité du prix, cad si la somme des deux appartient à la liste itemDifficult
+                        price_valid = False
+                        while (price_valid == False) :
+                            priceA = random.choice(itemEasy+itemDifficult)
+                            priceB = random.choice(itemEasy+itemDifficult)
+                            if (priceA+priceB) in itemDifficult:
+                                price = priceA+priceB
+                                price_valid = True
+
+                        solution = []
+                        new_price=price
+                        i=len(change)-1
+                        while (new_price > 0 ):
+                            if (new_price-change[i])>=0:
+                                new_price=new_price-change[i]
+                                solution.add(change[i])
+                            else :
+                                i-=1
+                return (question, str(solution)) 
+
+            #vendre et rendre la monnaie d’un objet
+            case Category.TypeR:
+                match self.difficulty:
+                    case Difficulty.EASY:
+                        price = random.choice(itemEasy+itemDifficult)
+                        change_valid = False
+                        while (change_valid == False) :
+                            nb_item_selct = random.choice([1, 2, 3])
+                            change_client = random.sample(change, nb_item_selct)
+                            #vérifier si le client a bien donné plus que le prix indiqué et si le retour de la monnaie est facile
+                            if (sum(change_client)>=price) and (price-sum(change_client)in itemEasy) :
+                                change_valid=True
+
+                        question = (
+                            f"Tu es le marchand, rends la monnaie au client.
+                            Le jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
+                            )
+                        solution = price-sum(change_client)
+                
+                    case Difficulty.HARD:
+                        price = random.choice(itemEasy+itemDifficult)
+                        change_valid = False
+                        while (change_valid == False) :
+                            nb_item_selct = random.choice([1, 2, 3])
+                            change_client = random.sample(change, nb_item_selct)
+                            #vérifier si le client a bien donné plus que le prix indiqué et si le retour de la monnaie est difficile
+                            if (sum(change_client)>=price) and (price-sum(change_client)in itemDifficult) :
+                                change_valid=True
+
+                        question = (
+                        f"Tu es le marchand, rends la monnaie au client. 
+                        Le jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
+                        )
+                        solution = price-sum(change_client)
+            
+            #vendre et rendre la monnaie de deux objets
+            case Category.TypeRM:              
+                match self.difficulty:
+                    case Difficulty.EASY:
+                        priceA = random.choice(itemEasy+itemDifficult)
+                        priceB = random.choice(itemEasy+itemDifficult)
+                        change_valid = False
+                        while (change_valid == False) :
+                            nb_item_selct = random.choice([1, 2, 3])
+                            change_client = random.sample(change, nb_item_selct)
+                            if (sum(change_client)>=priceA+priceB) and (priceA+priceB-sum(change_client)in itemEasy) :
+                                change_valid=True
+
+                        question = (
+                        f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€. 
+                        Le deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}." 
+                        )
+                        solution = priceA+priceB-sum(change_client)
+                
+                    case Difficulty.HARD:
+                        priceA = random.choice(itemEasy+itemDifficult)
+                        priceB = random.choice(itemEasy+itemDifficult)
+                        change_valid = False
+                        while (change_valid == False) :
+                            nb_item_selct = random.choice([1, 2, 3])
+                            change_client = random.sample(change, nb_item_selct)
+                            if (sum(change_client)>=priceA+priceB) and (priceA+priceB-sum(change_client)in itemDifficult) :
+                                change_valid=True
+
+                        question = (
+                        f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€. 
+                        Le deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}."
+                        )
+                        solution = priceA+priceB-sum(change_client)
+        
         
         return question
     
@@ -46,6 +163,19 @@ class Exercice:
         distance = 0
         # TODO
         return distance
+    
+    def get_PDA(self, trial: dict) -> int:
+        """
+        calculer une mesure de la qualité de chaque activité, 
+        mesurer combien de progrès a une activité prévue dans une fenêtre de temps récent.
+        parameters:
+            - Ck, k, t, d 
+        return: la progression de l’apprentissage, r
+        """
+        r=0
+        # TODO
+        return r
+    
     
     def try_question(self, question: dict) -> dict:
         """
