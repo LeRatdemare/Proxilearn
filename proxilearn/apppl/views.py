@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from apppl.models import Exercice
 from apppl.forms import ExerciceForm
-from apppl.code_ia import *
+from apppl.logic.code_ia import *
 
 # Create your views here.
 def index(request):
