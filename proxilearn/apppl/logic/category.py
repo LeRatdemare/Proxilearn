@@ -1,6 +1,7 @@
 from enum import Enum
 
 class Category(Enum):
-    A = 0
-    B = 1
-    C = 2
+    TypeM = 0
+    TypeMM = 1
+    TypeR = 2
+    TypeRM = 3
