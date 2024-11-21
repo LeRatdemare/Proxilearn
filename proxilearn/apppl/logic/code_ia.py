@@ -2,7 +2,7 @@ from apppl.logic.category import Category
 from apppl.logic.difficulty import Difficulty
 import random
 
-class Exercice:
+class Node:
 
     ACTIVITIES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
     def __init__(self, category: Category, difficulty: int, is_available: bool= False, previous_trials: list[dict] = []):
@@ -170,11 +170,11 @@ class Exercice:
         for trial in self.previous_trials:
             distance = trial['distance']
             C.append(distance)
-        t=len(Exercice.ACTIVITIES)
+        t=len(Node.ACTIVITIES)
 
-        for k in range (t-d/2,t) :
+        for k in range(t-d/2,t):
             r+=C[k]/(d/2)
-        for k in range (t-d,t-d/2) :
+        for k in range(t-d,t-d/2):
             r-=C[k]/(d-d/2)
 
         return r
