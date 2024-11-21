@@ -17,7 +17,7 @@ class Exercice:
         return: question sous la forme {str(question), str(solution)}
         """
         question = {"question": str(), "solution": str()}
-        change = [1,2,5,10] #pièces et billets disponibles, on pourra en rajouter plus tard
+        change = [10,5,2,1] #pièces et billets disponibles, on pourra en rajouter plus tard
         itemEasy = [1,2,5,10] #à lecture directe, c’est-à-dire si une pièce ou un billet de la valeur de ce montant existe
         itemDifficult = [3,4,6,7,8,9,11,12,13,14,15,16,17,18,19] #combiner plusieurs objet
 
@@ -34,15 +34,14 @@ class Exercice:
                         price = random.choice(itemDifficult)
                         question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le jeu coûte {price}€."
                         solution = []
-                        new_price=price
-                        i=len(change)-1
-                        while (new_price > 0 ):
-                            if (new_price-change[i])>=0:
-                                new_price=new_price-change[i]
-                                solution.add(change[i])
-                            else :
-                                i-=1
-                return (question, str(solution)) 
+                        left_to_pay=price
+                        while (left_to_pay > 0):
+                            i = 0
+                            while (i<len(change) and change[i]>left_to_pay):
+                                i += 1
+                            left_to_pay -= change[i]
+                            solution.add(change[i])
+                return (question, str(solution))
             
             #acheter et payer deux objets
             case Category.TypeMM:
@@ -71,11 +70,11 @@ class Exercice:
                                 price_valid = True
 
                         solution = []
-                        new_price=price
+                        left_to_pay=price
                         i=len(change)-1
-                        while (new_price > 0 ):
-                            if (new_price-change[i])>=0:
-                                new_price=new_price-change[i]
+                        while (left_to_pay > 0 ):
+                            if (left_to_pay-change[i])>=0:
+                                left_to_pay=left_to_pay-change[i]
                                 solution.add(change[i])
                             else :
                                 i-=1
@@ -150,8 +149,6 @@ class Exercice:
                         Le deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}."
                         )
                         solution = priceA+priceB-sum(change_client)
-        
-        
         return question
     
     def get_distance(self, trial: dict) -> int:
