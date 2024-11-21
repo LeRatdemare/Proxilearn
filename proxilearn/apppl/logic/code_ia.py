@@ -2,7 +2,7 @@ from apppl.logic.category import Category
 from apppl.logic.difficulty import Difficulty
 import random
 
-class Exercice:
+class Node:
 
     def __init__(self, category: Category, difficulty: int, is_available: bool= False, previous_trials: list[dict] = []):
         self.category: Category = category
