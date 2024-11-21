@@ -18,4 +18,8 @@ def index(request):
         'exercices': Exercice.objects.all(),
         'formulaire': formulaire
     }
+    learning = True
+    while learning== True :
+        Z
+
     return render(request, 'index.html', context)

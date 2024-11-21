@@ -4,11 +4,12 @@ import random
 
 class Exercice:
 
+    ACTIVITIES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
     def __init__(self, category: Category, difficulty: int, is_available: bool= False, previous_trials: list[dict] = []):
         self.category: Category = category
         self.difficulty: int = difficulty
         self.is_available: bool = is_available
-        self.previous_trials: list[dict[str, str, str, str]] = previous_trials # [{question, solution, answer, distance}, ...]
+        self.previous_trials: list[dict[str, str, str, float]] = previous_trials # [{question, solution, answer, distance}, ...]
     
     def generate_question(self) -> dict[str, str]:
         """
@@ -139,14 +140,17 @@ class Exercice:
                         solution = priceA+priceB-sum(change_client)
         return question
     
-    def get_distance(self, trial: dict) -> int:
+    def get_distance(trial: dict) -> int:
         """
         parameters:
             - trial sous la forme {str(question), str(solution), str(answer)}
         return: la distance entre la solution et la réponse
         """
-        distance = 0
-        # TODO
+        if (trial['solution']==trial['answer']):
+            distance = 1
+        else:
+            distance = 0
+               
         return distance
     
     def get_PDA(self, trial: dict) -> int:
@@ -154,11 +158,25 @@ class Exercice:
         calculer une mesure de la qualité de chaque activité, 
         mesurer combien de progrès a une activité prévue dans une fenêtre de temps récent.
         parameters:
-            - Ck, k, t, d 
+            - Ck, 
+            - k, le moment où on calcule la PDA
+            - t, nombre total d’exercices effectués 
+            - d, le nombre d’exercices retenus pour la comparaison
         return: la progression de l’apprentissage, r
         """
         r=0
-        # TODO
+        d=10 # à choisir ou il existe une valeur pertienente ?
+        C=[]
+        for trial in self.previous_trials:
+            distance = trial['distance']
+            C.append(distance)
+        t=len(Exercice.ACTIVITIES)
+
+        for k in range (t-d/2,t) :
+            r+=C[k]/(d/2)
+        for k in range (t-d,t-d/2) :
+            r-=C[k]/(d-d/2)
+
         return r
     
     
