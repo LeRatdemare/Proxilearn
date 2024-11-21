@@ -170,11 +170,11 @@ class Node:
         for trial in self.previous_trials:
             distance = trial['distance']
             C.append(distance)
-        t=len(Exercice.ACTIVITIES)
+        t=len(Node.ACTIVITIES)
 
-        for k in range (t-d/2,t) :
+        for k in range(t-d/2,t):
             r+=C[k]/(d/2)
-        for k in range (t-d,t-d/2) :
+        for k in range(t-d,t-d/2):
             r-=C[k]/(d-d/2)
 
         return r
