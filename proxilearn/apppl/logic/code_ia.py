@@ -1,5 +1,5 @@
-from category import Category
-from difficulty import Difficulty
+from apppl.logic.category import Category
+from apppl.logic.difficulty import Difficulty
 import random
 
 class Exercice:
@@ -93,10 +93,7 @@ class Exercice:
                             if (sum(change_client)>=price) and (price-sum(change_client)in itemEasy) :
                                 change_valid=True
 
-                        question = (
-                            f"Tu es le marchand, rends la monnaie au client.
-                            Le jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
-                            )
+                        question = f"Tu es le marchand, rends la monnaie au client.\nLe jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
                         solution = price-sum(change_client)
                 
                     case Difficulty.HARD:
@@ -109,10 +106,7 @@ class Exercice:
                             if (sum(change_client)>=price) and (price-sum(change_client)in itemDifficult) :
                                 change_valid=True
 
-                        question = (
-                        f"Tu es le marchand, rends la monnaie au client. 
-                        Le jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
-                        )
+                        question = f"Tu es le marchand, rends la monnaie au client.\nLe jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
                         solution = price-sum(change_client)
             
             #vendre et rendre la monnaie de deux objets
@@ -128,10 +122,7 @@ class Exercice:
                             if (sum(change_client)>=priceA+priceB) and (priceA+priceB-sum(change_client)in itemEasy) :
                                 change_valid=True
 
-                        question = (
-                        f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€. 
-                        Le deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}." 
-                        )
+                        question = f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€.\nLe deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}." 
                         solution = priceA+priceB-sum(change_client)
                 
                     case Difficulty.HARD:
@@ -144,10 +135,7 @@ class Exercice:
                             if (sum(change_client)>=priceA+priceB) and (priceA+priceB-sum(change_client)in itemDifficult) :
                                 change_valid=True
 
-                        question = (
-                        f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€. 
-                        Le deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}."
-                        )
+                        question = f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€.\nLe deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}."
                         solution = priceA+priceB-sum(change_client)
         return question
     
