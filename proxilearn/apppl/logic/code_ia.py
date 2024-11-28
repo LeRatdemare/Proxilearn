@@ -2,7 +2,7 @@ from apppl.logic.category import Category
 from apppl.logic.difficulty import Difficulty
 import random
 
-class Node:
+class NodeLogic:
 
     EXERCICES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
     FENETRE_D=10 # à choisir ou il existe une valeur pertienente ?
@@ -172,10 +172,10 @@ class Node:
             C.append(distance)
         t=len(self.previous_trials)
 
-        for k in range(t-Node.FENETRE_D/2,t+1):
-            r+=(1-C[k])/(Node.FENETRE_D/2)
-        for k in range(t-Node.FENETRE_D,t-Node.FENETRE_D/2+1):
-            r-=(1-C[k])/(Node.FENETRE_D/2)
+        for k in range(t-NodeLogic.FENETRE_D/2,t+1):
+            r+=(1-C[k])/(NodeLogic.FENETRE_D/2)
+        for k in range(t-NodeLogic.FENETRE_D,t-NodeLogic.FENETRE_D/2+1):
+            r-=(1-C[k])/(NodeLogic.FENETRE_D/2)
         return r
     
     
