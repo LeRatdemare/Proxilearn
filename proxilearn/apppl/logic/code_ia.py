@@ -4,7 +4,9 @@ import random
 
 class Node:
 
-    ACTIVITIES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
+    EXERCICES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
+    FENETRE_D=10 # à choisir ou il existe une valeur pertienente ?
+    
     def __init__(self, category: Category, difficulty: int, is_available: bool= False, previous_trials: list[dict] = []):
         self.category: Category = category
         self.difficulty: int = difficulty
@@ -42,7 +44,6 @@ class Node:
                                 i += 1
                             left_to_pay -= change[i]
                             solution.add(change[i])
-                return (question, str(solution))
             
             #acheter et payer deux objets
             case Category.TypeMM:
@@ -70,6 +71,7 @@ class Node:
                                 price = priceA+priceB
                                 price_valid = True
 
+                        question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."
                         solution = []
                         left_to_pay=price
                         i=len(change)-1
@@ -79,7 +81,7 @@ class Node:
                                 solution.add(change[i])
                             else :
                                 i-=1
-                return (question, str(solution)) 
+                return {'question':question, 'solution':solution} 
 
             #vendre et rendre la monnaie d’un objet
             case Category.TypeR:
@@ -138,7 +140,8 @@ class Node:
 
                         question = f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€.\nLe deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}."
                         solution = priceA+priceB-sum(change_client)
-        return question
+
+        return {'question':question, 'solution':solution}
     
     def get_distance(trial: dict) -> int:
         """
@@ -147,11 +150,8 @@ class Node:
         return: la distance entre la solution et la réponse
         """
         if (trial['solution']==trial['answer']):
-            distance = 1
-        else:
-            distance = 0
-               
-        return distance
+            return 0
+        return 1
     
     def get_PDA(self, trial: dict) -> int:
         """
@@ -165,38 +165,32 @@ class Node:
         return: la progression de l’apprentissage, r
         """
         r=0
-        d=10 # à choisir ou il existe une valeur pertienente ?
+        
         C=[]
         for trial in self.previous_trials:
             distance = trial['distance']
             C.append(distance)
-        t=len(Node.ACTIVITIES)
+        t=len(self.previous_trials)
 
-        for k in range(t-d/2,t):
-            r+=C[k]/(d/2)
-        for k in range(t-d,t-d/2):
-            r-=C[k]/(d-d/2)
-
+        for k in range(t-Node.FENETRE_D/2,t+1):
+            r+=(1-C[k])/(Node.FENETRE_D/2)
+        for k in range(t-Node.FENETRE_D,t-Node.FENETRE_D/2+1):
+            r-=(1-C[k])/(Node.FENETRE_D/2)
         return r
     
     
-    def try_question(self, question: dict) -> dict:
+    def try_question(self, question: dict, answer: str) -> dict:
         """
         Let the user try a question, returns the trial and adds it to the self.previous_trials\n
         parameters:
             - question sous la forme {str(question), str(solution)}
-            - 
+            - answer sous la forme str(answer)
         \n
         return: {str(question), str(solution), str(answer), str(distance)}
         """
         trial = dict(question)
-        answer = ""
-        
-        # TODO
-
         trial['answer'] = answer
-        trial['distance'] = self.get_distance(trial=trial)
-
+        trial['distance'] = self.get_distance(trial=trial) # WARNING this line is tricky and cause problems
 
         return trial
 
