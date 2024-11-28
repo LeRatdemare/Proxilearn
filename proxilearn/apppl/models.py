@@ -1,11 +1,18 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 class Node(models.Model):
+
+    class Category(models.TextChoices):
+        TypeM = 'M'
+        TypeMM = 'MM'
+        TypeR = 'R'
+        TypeRM = 'RR'
+
     id = models.AutoField(primary_key=True)
+    category = models.CharField(max_length=2, choices=Category, default=Category.TypeM)
     difficulty = models.IntegerField()
-    category = models.IntegerField()
     
     def __str__(self):
         return f"Catégorie : {self.category} ; Difficulté : {self.difficulty}"
@@ -38,7 +45,7 @@ class Exercice(models.Model):
 class Trial(models.Model):
     id = models.AutoField(primary_key=True)
     exercice_id = models.ForeignKey(Exercice, on_delete=models.CASCADE, blank=False, null=False, related_name='trials')
-    date = models.DateField(_(""), auto_now=False, auto_now_add=True)
+    date = models.DateField(auto_now=False, auto_now_add=True)
     question = models.CharField(max_length=255, blank=False, null=False)
     solution = models.CharField(max_length=255, blank=False, null=False)
     student_answer = models.CharField(max_length=255, blank=False, null=False)

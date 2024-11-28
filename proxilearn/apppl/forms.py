@@ -1,7 +1,7 @@
-from apppl.models import Exercice
+from apppl.models import Node
 from django.forms import ModelForm
 
-class ExerciceForm(ModelForm):
+class NodeForm(ModelForm):
     class Meta:
-        model = Exercice
-        fields = ('name', 'description', 'difficulty', 'category')
+        model = Node
+        fields = ('id', 'category', 'difficulty')

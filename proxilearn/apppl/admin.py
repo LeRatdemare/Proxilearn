@@ -1,10 +1,10 @@
 from django.contrib import admin
-from apppl.models import Exercice
+from apppl.models import Node
 
 # Register your models here.
 
-class ExerciceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'difficulty', 'category')
+class NodeAdmin(admin.ModelAdmin):
+    list_display = ('category', 'difficulty')
     search_fields = ['name']
 
-admin.site.register(Exercice, ExerciceAdmin)
+admin.site.register(Node, NodeAdmin)

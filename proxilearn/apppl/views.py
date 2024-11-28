@@ -1,25 +1,25 @@
 from django.shortcuts import render
-from apppl.models import Exercice
-from apppl.forms import ExerciceForm
+from apppl.models import Node
+from apppl.forms import NodeForm
 from apppl.logic.code_ia import *
 
 # Create your views here.
 def index(request):
-    formulaire = ExerciceForm()
+    formulaire = NodeForm()
 
     if request.method == 'POST':
-        formulaire = ExerciceForm(request.POST)
+        formulaire = NodeForm(request.POST)
         if formulaire.is_valid():
             formulaire.save()
         else:
             print(formulaire.errors)
     
     context = {
-        'exercices': Exercice.objects.all(),
+        'exercices': Node.objects.all(),
         'formulaire': formulaire
     }
     learning = True
-    while learning== True :
-        Z
+    while learning == True :
+        learning = False
 
     return render(request, 'index.html', context)
