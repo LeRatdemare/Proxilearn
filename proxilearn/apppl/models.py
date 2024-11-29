@@ -8,7 +8,7 @@ class Node(models.Model):
         TypeM = 'M'
         TypeMM = 'MM'
         TypeR = 'R'
-        TypeRM = 'RR'
+        TypeRM = 'RM'
     class Difficulty(models.IntegerChoices):
         EASY = 0
         HARD = 1
