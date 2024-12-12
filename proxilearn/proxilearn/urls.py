@@ -21,4 +21,5 @@ from apppl import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
+    path('exercice/<int:node_id>/<int:student_id>/', views.exercice, name='exercice'),
 ]

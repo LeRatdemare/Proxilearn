@@ -9,11 +9,21 @@ class ExerciceLogic:
     FAIL_THRESHOLD=-0.8 # à choisir ou il existe une valeur pertienente ?
     
     def __init__(self, student, node):
-        self.exercice = Exercice.objects.get(node=node, student=student)
+        """
+        parameters:
+            - student : Student the student who is doing the exercice
+            - node : Node the node of the exercice
+        """
+        try:
+            self.exercice = Exercice.objects.get(node=node, student=student)
+        except Exercice.DoesNotExist:
+            self.exercice = Exercice.objects.create(node=node, student=student, state=Exercice.State.UNAVAILABLE, r_score=0)
+
         self.category: Node.Category = self.exercice.node.category
         self.difficulty: Node.Difficulty = self.exercice.node.difficulty
         self.previous_trials: list[dict[str, str, str, float]] = [] # [{question, solution, answer, distance}, ...]
-        for trial in self.exercice.trials:
+        
+        for trial in self.exercice.trials.all():
             self.previous_trials.append({
                 'question': trial.question,
                 'solution': trial.solution,
