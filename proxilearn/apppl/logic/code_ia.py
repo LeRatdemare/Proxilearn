@@ -21,6 +21,7 @@ class ExerciceLogic:
 
         self.category: Node.Category = self.exercice.node.category
         self.difficulty: Node.Difficulty = self.exercice.node.difficulty
+        print(f"Preparing exercice for {student} of category {self.category} and difficulty {self.difficulty}")
         self.previous_trials: list[dict[str, str, str, float]] = [] # [{question, solution, answer, distance}, ...]
         
         for trial in self.exercice.trials.all():
@@ -61,7 +62,7 @@ class ExerciceLogic:
                             while (i<len(change) and change[i]>left_to_pay):
                                 i += 1
                             left_to_pay -= change[i]
-                            solution.add(change[i])
+                            solution.append(change[i])
             
             #acheter et payer deux objets
             case Node.Category.TypeMM:
@@ -95,10 +96,9 @@ class ExerciceLogic:
                         while (left_to_pay > 0 ):
                             if (left_to_pay-change[i])>=0:
                                 left_to_pay=left_to_pay-change[i]
-                                solution.add(change[i])
+                                solution.append(change[i])
                             else :
                                 i-=1
-                return {'question':question, 'solution':solution} 
 
             #vendre et rendre la monnaie d’un objet
             case Node.Category.TypeR:
@@ -238,6 +238,16 @@ class ExerciceLogic:
             
         # TODO : Make sure that there is always at least 2 exercices AVAILABLE
     
+    def _convert_attempt_to_valid_input(attempt: str) -> str:
+        """
+        Convert the attempt to a valid input
+        """
+        l = attempt.split(",")
+        for i in range(len(l)):
+            l[i] = int(l[i])
+        print(f"Attemp {attempt} to list ===> {l}")
+        return str(l)
+    
     def try_question(self, question: dict, answer: str) -> dict:
         """
         Let the user try a question, returns the trial and adds it to the self.previous_trials\n
@@ -251,7 +261,7 @@ class ExerciceLogic:
             raise Exception("Exercice is not available")
         
         trial = dict(question)
-        trial['answer'] = answer
+        trial['answer'] = ExerciceLogic._convert_attempt_to_valid_input(answer)
         trial['distance'] = ExerciceLogic.get_distance(trial) # WARNING this line is tricky and cause problems
         print(f"Trial: {trial}")
 
