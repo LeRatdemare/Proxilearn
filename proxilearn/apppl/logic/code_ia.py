@@ -17,7 +17,7 @@ class ExerciceLogic:
         try:
             self.exercice = Exercice.objects.get(node=node, student=student)
         except Exercice.DoesNotExist:
-            self.exercice = Exercice.objects.create(node=node, student=student, state=Exercice.State.UNAVAILABLE, r_score=0)
+            self.exercice = Exercice.objects.create(node=node, student=student, state=Exercice.State.AVAILABLE)
 
         self.category: Node.Category = self.exercice.node.category
         self.difficulty: Node.Difficulty = self.exercice.node.difficulty
@@ -186,13 +186,15 @@ class ExerciceLogic:
         C=[]
         for trial in self.previous_trials:
             distance = trial['distance']
-            C.append(distance)
+            C.append(1-distance)
         t=len(self.previous_trials)
 
-        for k in range(t-d/2,t+1):
-            r+=(1-C[k])/(d/2)
-        for k in range(t-d,t-d/2+1):
-            r-=(1-C[k])/(d/2)
+        for k in range(max(0,int(t-d/2)),t):
+            print(f"Bonus part ===> t={t}, k={k}, d={d}")
+            r+=(C[k])/(d/2)
+        for k in range(max(0,t-d),min(1,int(t-d/2))):
+            print(f"Malus part ===> t={t}, k={k}, d={d}")
+            r-=(C[k])/(d/2)
         
         self.exercice.r_score = r
         self.exercice.save()
@@ -213,21 +215,21 @@ class ExerciceLogic:
 
         if self.exercice.state == Exercice.State.SUCCEED:
             # We first get the next UNAVAILABLE Exercice in same category to make it AVAILABLE
-            next_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, difficulty__gt=self.difficulty, state=Exercice.State.UNAVAILABLE).order_by('-node__difficulty').first()
+            next_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__gt=self.difficulty, state=Exercice.State.UNAVAILABLE).order_by('-node__difficulty').first()
             if next_exercice_same_category:
                 next_exercice_same_category.state = Exercice.State.AVAILABLE
                 next_exercice_same_category.save()
             
         elif self.exercice.state == Exercice.State.FAILED:
             # We find the previous exercice in the same category to make it AVAILABLE
-            previous_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, difficulty__lt=self.difficulty, state=Exercice.State.SUCCEED).order_by('node__difficulty').first()
+            previous_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__lt=self.difficulty, state=Exercice.State.SUCCEED).order_by('node__difficulty').first()
             if previous_exercice_same_category:
                 previous_exercice_same_category.state = Exercice.State.AVAILABLE
                 previous_exercice_same_category.save()
         
         # In both cases we make another exercice of the same difficulty AVAILABLE 
         if self.exercice.state == Exercice.State.SUCCEED or self.exercice.state == Exercice.State.FAILED:
-            other_exercices_same_difficulty = Exercice.objects.filter(student=self.exercice.student, difficulty=self.difficulty, state=Exercice.State.UNAVAILABLE).exclude(node__category=self.category)
+            other_exercices_same_difficulty = Exercice.objects.filter(student=self.exercice.student, node__difficulty=self.difficulty, state=Exercice.State.UNAVAILABLE).exclude(node__category=self.category)
             if other_exercices_same_difficulty:
                 # We choose a random exercice
                 next_exercice_same_difficulty = random.choice(other_exercices_same_difficulty)
@@ -245,9 +247,13 @@ class ExerciceLogic:
         \n
         return: {str(question), str(solution), str(answer), str(distance)}
         """
+        if self.exercice.state != Exercice.State.AVAILABLE:
+            raise Exception("Exercice is not available")
+        
         trial = dict(question)
         trial['answer'] = answer
-        trial['distance'] = self.get_distance(trial=trial) # WARNING this line is tricky and cause problems
+        trial['distance'] = ExerciceLogic.get_distance(trial) # WARNING this line is tricky and cause problems
+        print(f"Trial: {trial}")
 
         # On enregistre le trial dans la base de données
         Trial.objects.create(exercice=self.exercice, question=trial['question'], solution=trial['solution'], student_answer=trial['answer'], distance=trial['distance'])

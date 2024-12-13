@@ -2,5 +2,16 @@
 
 <!-- On affiche la question à l'exercice 'exercice'-->
 <h2>Exercice</h2>
+<div class='question'>{{ question.question }}</div><br/>
+
+<form action="{% url 'exercice' node.id student.id %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="question" value="{{ question.question }}">
+    <input type="hidden" name="solution" value="{{ question.solution }}">
+    
+    <label for="reponse">Tente ta chance :</label><br/>
+    <input type="text" name="student_answer"><br/>
+    <button type="submit">Valider</button>
+</form>
 
 {% endblock %}

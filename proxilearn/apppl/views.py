@@ -39,11 +39,23 @@ def exercice(request, node_id, student_id):
         print(f"Exercice {node_id} pour l'étudiant {student_id}")
         node = Node.objects.get(pk=node_id)
         student = Student.objects.get(pk=student_id)
+        exercice = ExerciceLogic(node=node, student=student)
 
-        exercice_logic = ExerciceLogic(student=student, node=node)
+        if request.method == 'POST':
+            # On récupère la question et la réponse de l'étudiant
+            question = {'question':request.POST.get('question'), 'solution':request.POST.get('solution')}
+            student_answer = request.POST.get('student_answer')
+            # On crée un essai
+            trial = exercice.try_question(question, student_answer)
+            
+            print(f"Essai: {trial}")
+        else:
+            question = exercice.generate_question()
 
         context = {
-            
+            'node': node,
+            'student': student,
+            'question': question,
         }
 
         return render(request, 'exercice.html', context=context)
