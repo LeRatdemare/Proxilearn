@@ -9,4 +9,4 @@ class NodeForm(ModelForm):
 class StudentForm(ModelForm):
     class Meta:
         model = Student
-        fields = ('id', 'name', 'surname')
+        fields = ('id', 'first_name', 'last_name')

@@ -5,6 +5,8 @@ from apppl.logic.code_ia import *
 
 # Create your views here.
 def index(request):
+    user = request.user if request.user.is_authenticated else None
+    
     formulaire_node = NodeForm()
     formulaire_student = StudentForm()
 
@@ -28,6 +30,7 @@ def index(request):
         'students': Student.objects.all(),
         'formulaire_node': formulaire_node,
         'formulaire_student': formulaire_student,
+        'user': user,
     }
     learning = True
     while learning == True :
@@ -36,6 +39,8 @@ def index(request):
     return render(request, 'index.html', context)
 
 def exercice(request, node_id, student_id):
+        user = request.user if request.user.is_authenticated else None
+
         print(f"Exercice {node_id} pour l'étudiant {student_id}")
         node = Node.objects.get(pk=node_id)
         student = Student.objects.get(pk=student_id)
@@ -55,6 +60,7 @@ def exercice(request, node_id, student_id):
             'node': node,
             'student': student,
             'question': question,
+            'user': user,
         }
 
         return render(request, 'exercice.html', context=context)

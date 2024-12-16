@@ -4,7 +4,7 @@
 <h2>Exercices</h2>
 <ul>
     {% for node in nodes %}
-        <li>{{ node }} | <a href="{% url "exercice" node.id 1 %}">try it</a></li>
+        <li>{{ node }} | {% if user %}<a href="{% url "exercice" node.id user.id %}">try it as {{ user }}</a>{% else %}Login to try exercice...{% endif %} </li>
     {% endfor %}
 </ul>
 
