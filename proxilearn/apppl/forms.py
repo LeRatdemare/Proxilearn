@@ -4,7 +4,7 @@ from django.forms import ModelForm
 class NodeForm(ModelForm):
     class Meta:
         model = Node
-        fields = ('id', 'category', 'difficulty')
+        fields = ('id', 'category', 'difficulty', 'answer_type')
 
 class StudentForm(ModelForm):
     class Meta:

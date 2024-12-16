@@ -14,10 +14,15 @@ class Node(models.Model):
     class Difficulty(models.IntegerChoices):
         EASY = 0
         HARD = 1
+    class AnswerType(models.TextChoices):
+        TEXT = 'T'
+        LIST = 'L'
+        INTEGER = 'I'
 
     id = models.AutoField(primary_key=True)
     category = models.CharField(max_length=2, choices=Category, default=Category.TypeM)
     difficulty = models.IntegerField(choices=Difficulty, default=Difficulty.EASY)
+    answer_type = models.CharField(max_length=1, choices=AnswerType, default=AnswerType.TEXT)
     
     def __str__(self):
         return f"Catégorie : {self.category} ; Difficulté : {self.difficulty}"

@@ -4,7 +4,7 @@ from apppl.models import Node, Student, Exercice, Trial
 # Register your models here.
 
 class NodeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'category', 'difficulty')
+    list_display = ('id', 'category', 'difficulty', 'answer_type')
     search_fields = ['name']
 
 class StudentAdmin(admin.ModelAdmin):

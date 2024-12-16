@@ -7,7 +7,7 @@ class ExerciceLogic:
     FENETRE_D=10 # à choisir ou il existe une valeur pertienente ?
     CHECK_THRESHOLD=0.7 # à choisir ou il existe une valeur pertienente ?
     FAIL_THRESHOLD=-0.8 # à choisir ou il existe une valeur pertienente ?
-    
+
     def __init__(self, student, node):
         """
         parameters:
@@ -36,9 +36,9 @@ class ExerciceLogic:
         """
         Génère une question aléatoire en fonction de la catégorie et de la difficulté de l'exercice.
 
-        return: question sous la forme {str(question), str(solution)}
+        return: question sous la forme {str(question), str(solution), str(answer_type)}
         """
-        question = {"question": str(), "solution": str()}
+        question = {"question": str(), "solution": str(), "answer_type": str()}
         change = [10,5,2,1] #pièces et billets disponibles, on pourra en rajouter plus tard
         itemEasy = [1,2,5,10] #à lecture directe, c’est-à-dire si une pièce ou un billet de la valeur de ce montant existe
         itemDifficult = [3,4,6,7,8,9,11,12,13,14,15,16,17,18,19] #combiner plusieurs objet
@@ -50,12 +50,14 @@ class ExerciceLogic:
                     case Node.Difficulty.EASY:
                        price = random.choice(itemEasy)
                        question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le jeu coûte {price}€."
-                       solution = price                      
+                       solution = price
+                       answer_type = Node.AnswerType.INTEGER
 
                     case Node.Difficulty.HARD:
                         price = random.choice(itemDifficult)
                         question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le jeu coûte {price}€."
                         solution = []
+                        answer_type = Node.AnswerType.LIST
                         left_to_pay=price
                         while (left_to_pay > 0):
                             i = 0
@@ -77,7 +79,8 @@ class ExerciceLogic:
                                 price = priceA+priceB
                                 price_valid = True
                         question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."
-                        solution = priceA+priceB                       
+                        solution = priceA+priceB
+                        answer_type = Node.AnswerType.INTEGER
 
                     case Node.Difficulty.HARD:
                         #vérifier la validité du prix, cad si la somme des deux appartient à la liste itemDifficult
@@ -91,6 +94,7 @@ class ExerciceLogic:
 
                         question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."
                         solution = []
+                        answer_type = Node.AnswerType.LIST
                         left_to_pay=price
                         i=len(change)-1
                         while (left_to_pay > 0 ):
@@ -115,6 +119,7 @@ class ExerciceLogic:
 
                         question = f"Tu es le marchand, rends la monnaie au client.\nLe jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
                         solution = price-sum(change_client)
+                        answer_type = Node.AnswerType.INTEGER
                 
                     case Node.Difficulty.HARD:
                         price = random.choice(itemEasy+itemDifficult)
@@ -128,6 +133,7 @@ class ExerciceLogic:
 
                         question = f"Tu es le marchand, rends la monnaie au client.\nLe jeu coûte {price}€ et le client t'as donné {list(map(print, change_client))}."
                         solution = price-sum(change_client)
+                        answer_type = Node.AnswerType.LIST
             
             #vendre et rendre la monnaie de deux objets
             case Node.Category.TypeRM:              
@@ -144,6 +150,7 @@ class ExerciceLogic:
 
                         question = f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€.\nLe deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}." 
                         solution = priceA+priceB-sum(change_client)
+                        answer_type = Node.AnswerType.INTEGER
                 
                     case Node.Difficulty.HARD:
                         priceA = random.choice(itemEasy+itemDifficult)
@@ -157,8 +164,9 @@ class ExerciceLogic:
 
                         question = f"Tu es le marchand, rends la monnaie au client. Le premier article coûte {priceA}€.\nLe deuxième article coûte {priceB}€. Le client t'as donné {list(map(print, change_client))}."
                         solution = priceA+priceB-sum(change_client)
+                        answer_type = Node.AnswerType.LIST
 
-        return {'question':question, 'solution':solution}
+        return {'question':question, 'solution':solution, 'answer_type':answer_type}
     
     def get_distance(trial: dict) -> int:
         """
@@ -238,30 +246,34 @@ class ExerciceLogic:
             
         # TODO : Make sure that there is always at least 2 exercices AVAILABLE
     
-    def _convert_attempt_to_valid_input(attempt: str) -> str:
+    def _convert_attempt_to_valid_input(attempt: str, type: Node.AnswerType) -> str:
         """
         Convert the attempt to a valid input
         """
-        l = attempt.split(",")
-        for i in range(len(l)):
-            l[i] = int(l[i])
-        print(f"Attemp {attempt} to list ===> {l}")
-        return str(l)
+        if type == Node.AnswerType.LIST:
+            l = attempt.split(",")
+            for i in range(len(l)):
+                l[i] = int(l[i])
+            print(f"Attemp {attempt} to list ===> {l}")
+            return str(l)
+        
+        return str(attempt)
+
     
     def try_question(self, question: dict, answer: str) -> dict:
         """
         Let the user try a question, returns the trial and adds it to the self.previous_trials\n
         parameters:
-            - question sous la forme {str(question), str(solution)}
+            - question sous la forme {str(question), str(solution), str(answer_type)}
             - answer sous la forme str(answer)
         \n
-        return: {str(question), str(solution), str(answer), str(distance)}
+        return: {str(question), str(solution), str(answer), str(answer_type), str(distance)}
         """
         if self.exercice.state != Exercice.State.AVAILABLE:
             raise Exception("Exercice is not available")
         
         trial = dict(question)
-        trial['answer'] = ExerciceLogic._convert_attempt_to_valid_input(answer)
+        trial['answer'] = ExerciceLogic._convert_attempt_to_valid_input(answer, question['answer_type'])
         trial['distance'] = ExerciceLogic.get_distance(trial) # WARNING this line is tricky and cause problems
         print(f"Trial: {trial}")
 

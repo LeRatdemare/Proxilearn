@@ -43,14 +43,13 @@ def exercice(request, node_id, student_id):
 
         if request.method == 'POST':
             # On récupère la question et la réponse de l'étudiant
-            question = {'question':request.POST.get('question'), 'solution':request.POST.get('solution')}
+            question = {'question':request.POST.get('question'), 'solution':request.POST.get('solution'), 'answer_type':request.POST.get('answer_type')}
             student_answer = request.POST.get('student_answer')
             # On crée un essai
             trial = exercice.try_question(question, student_answer)
-            
             print(f"Essai: {trial}")
-        else:
-            question = exercice.generate_question()
+
+        question = exercice.generate_question()
 
         context = {
             'node': node,
