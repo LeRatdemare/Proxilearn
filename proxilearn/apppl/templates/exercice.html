@@ -3,10 +3,13 @@
 <!-- On affiche la question à l'exercice 'exercice'-->
 <h2>Exercice</h2>
 <div class='question'>{{ question.question }} <br/><br/>
+Tu disposes dans ton porte monnaiec de pièces de 1 et 2 €.
+Tu as également des billets de 5, 10 et 20 €.
 ps : la réponse attendue est de type '{{ node.answer_type }}'</div><br/>
 
 <form action="{% url 'exercice' node.id student.id %}" method="post">
     {% csrf_token %}
+    
     <input type="hidden" name="question" value="{{ question.question }}">
     <input type="hidden" name="solution" value="{{ question.solution }}">
     <input type="hidden" name="answer_type" value="{{ node.answer_type }}">
