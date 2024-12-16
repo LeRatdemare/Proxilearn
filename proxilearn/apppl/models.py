@@ -16,6 +16,7 @@ class Node(models.Model):
     class Difficulty(models.IntegerChoices):
         EASY = 0
         HARD = 1
+        VERYHARD = 2
     class AnswerType(models.TextChoices):
         TEXT = 'T'
         LIST = 'L'
