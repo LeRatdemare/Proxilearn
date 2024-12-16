@@ -79,8 +79,8 @@ class ExerciceLogic:
                         answer_type = Node.AnswerType.LIST
                         solution = calculate_solution(price, change)
                         
-                question = f"Tu es le client, paie ce que tu dois au marchand avec 
-                les pièces et les billets. Le jeu coûte {price}€."   
+                question = f"""Tu es le client, paie ce que tu dois au marchand avec 
+                les pièces et les billets. Le jeu coûte {price}€."""
             
             #acheter et payer deux objets
             case Node.Category.TypeMM:
@@ -119,13 +119,13 @@ class ExerciceLogic:
                         solution = calculate_solution(price, change)
 
 
-                question = f"Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. 
-                Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."
+                question = f"""Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. 
+                Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."""
 
             #vendre et rendre la monnaie d’un objet
             case Node.Category.TypeR:
                 def generate_question_typeR(price, change, valid_items, answer_type):
-                    """Génère une question et une solution pour rendre la monnaie."""
+                    #Génère une question et une solution pour rendre la monnaie.
                     change_valid = False
                     while not change_valid:
                         nb_item_select = random.choice([1, 2, 3])
@@ -135,15 +135,16 @@ class ExerciceLogic:
                             change_valid = True
 
                     question = (
-                        f"Tu es le marchand, rends la monnaie au client.\n"
-                        f"Le jeu coûte {price}€ et le client t'a donné {list(map(str, change_client))}."
+                        f"""Tu es le marchand, rends la monnaie au client.\n
+                        Le jeu coûte {price}€ et le client t'a donné {list(map(str, change_client))}."""
                     )
                     solution = sum(change_client) - price
                     return question, solution, answer_type
 
+                price = random.choice(itemEasy + itemDifficult)
+                
                 # Dans le match statement
                 match self.difficulty:
-                    price = random.choice(itemEasy + itemDifficult)
                     case Node.Difficulty.EASY:
                         question, solution, answer_type = generate_question_typeR(
                             price, change, itemEasy, Node.AnswerType.INTEGER
@@ -163,47 +164,47 @@ class ExerciceLogic:
             #vendre et rendre la monnaie de deux objets
             case Node.Category.TypeRM:              
                 def generate_multi_item_change_question(priceA, priceB, change, valid_items, answer_type):
-                #Génère une question et une solution pour rendre la monnaie lorsqu'il y a plusieurs articles.
-                change_valid = False
-                total_price = priceA + priceB
-                while not change_valid:
-                    nb_item_select = random.choice([1, 2, 3])
-                    change_client = random.sample(change, nb_item_select)
-                    # Vérifie si le client donne suffisamment et si le rendu est valide
-                    if sum(change_client) >= total_price and (sum(change_client) - total_price) in valid_items:
-                        change_valid = True
+                    #Génère une question et une solution pour rendre la monnaie lorsqu'il y a plusieurs articles.
+                    change_valid = False
+                    total_price = priceA + priceB
+                    while not change_valid:
+                        nb_item_select = random.choice([1, 2, 3])
+                        change_client = random.sample(change, nb_item_select)
+                        # Vérifie si le client donne suffisamment et si le rendu est valide
+                        if sum(change_client) >= total_price and (sum(change_client) - total_price) in valid_items:
+                            change_valid = True
 
-                question = (
-                    f"Tu es le marchand, rends la monnaie au client.\n"
-                    f"Le premier article coûte {priceA}€.\n"
-                    f"Le deuxième article coûte {priceB}€.\n"
-                    f"Le client t'a donné {list(map(str, change_client))}."
-                )
-                solution = sum(change_client) - total_price
-                return question, solution, answer_type
-
-            # Dans le match statement
-            match self.difficulty:
-                case Node.Difficulty.EASY:
-                    priceA = random.choice(itemEasy + itemDifficult)
-                    priceB = random.choice(itemEasy + itemDifficult)
-                    question, solution, answer_type = generate_multi_item_change_question(
-                        priceA, priceB, change, itemEasy, Node.AnswerType.INTEGER
+                    question = (
+                        f"""Tu es le marchand, rends la monnaie au client.\n
+                        Le premier article coûte {priceA}€.\n
+                        Le deuxième article coûte {priceB}€.\n
+                        Le client t'a donné {list(map(str, change_client))}."""
                     )
+                    solution = sum(change_client) - total_price
+                    return question, solution, answer_type
 
-                case Node.Difficulty.HARD:
-                    priceA = random.choice(itemEasy + itemDifficult)
-                    priceB = random.choice(itemEasy + itemDifficult)
-                    question, solution, answer_type = generate_multi_item_change_question(
-                        priceA, priceB, change, itemDifficult, Node.AnswerType.LIST
-                    )
+                # Dans le match statement
+                match self.difficulty:
+                    case Node.Difficulty.EASY:
+                        priceA = random.choice(itemEasy + itemDifficult)
+                        priceB = random.choice(itemEasy + itemDifficult)
+                        question, solution, answer_type = generate_multi_item_change_question(
+                            priceA, priceB, change, itemEasy, Node.AnswerType.INTEGER
+                        )
 
-                case Node.Difficulty.VERYHARD:
-                    priceA = random.choice(itemEasy + itemDifficult)
-                    priceB = random.choice(itemEasy + itemDifficult)
-                    question, solution, answer_type = generate_multi_item_change_question(
-                        priceA, priceB, change, itemVeryDifficult, Node.AnswerType.LIST
-                    )
+                    case Node.Difficulty.HARD:
+                        priceA = random.choice(itemEasy + itemDifficult)
+                        priceB = random.choice(itemEasy + itemDifficult)
+                        question, solution, answer_type = generate_multi_item_change_question(
+                            priceA, priceB, change, itemDifficult, Node.AnswerType.LIST
+                        )
+
+                    case Node.Difficulty.VERYHARD:
+                        priceA = random.choice(itemEasy + itemDifficult)
+                        priceB = random.choice(itemEasy + itemDifficult)
+                        question, solution, answer_type = generate_multi_item_change_question(
+                            priceA, priceB, change, itemVeryDifficult, Node.AnswerType.LIST
+                        )
 
 
         return {'question':question, 'solution':solution, 'answer_type':answer_type}
