@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import numpy as np
 
 # Create your models here.
 class Node(models.Model):
@@ -24,6 +25,10 @@ class Node(models.Model):
     category = models.CharField(max_length=2, choices=Category, default=Category.TypeM)
     difficulty = models.IntegerField(choices=Difficulty, default=Difficulty.EASY)
     answer_type = models.CharField(max_length=1, choices=AnswerType, default=AnswerType.TEXT)
+    
+    rate_of_exploration =  
+    epsilon = np.random.uniform(0, 1)
+
     
     def __str__(self):
         return f"Catégorie : {self.category} ; Difficulté : {self.difficulty}"
