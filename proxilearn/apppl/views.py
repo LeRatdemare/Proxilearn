@@ -35,6 +35,7 @@ def index(request):
         'formulaire_student': formulaire_student,
         'user': user,
     }
+    
     learning = True
     while learning == True :
         learning = False
@@ -51,7 +52,7 @@ def exercice(request, node_id, student_id):
         exercice = Exercice.objects.get(node=node, student=student)
         
         # Si l'exercice n'est pas disponible, on redirige vers l'accueil
-        if exercice.state != Exercice.State.AVAILABLE:
+        if exercice.state != Exercice.State.ACTIVE:
             return redirect('index')
 
         exercice_logic = ExerciceLogic(node=node, student=student)

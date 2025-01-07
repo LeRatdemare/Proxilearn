@@ -13,4 +13,4 @@ class RegisterForm(UserCreationForm):
 class NodeForm(ModelForm):
     class Meta:
         model = Node
-        fields = ('id', 'category', 'difficulty', 'answer_type')
+        fields = ('id', 'category', 'difficulty', 'answer_type', 'default_quality')
