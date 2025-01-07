@@ -4,6 +4,14 @@
         <title>ProxiLearn</title>
     </head>
     <body>
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
         <h1>ProxiLearn</h1>
         <p>Welcome to ProxiLearn, the online learning platform for professionals.</p>
         <p>ProxiLearn is a platform that allows professionals to learn new skills and knowledge in a flexible and convenient way. Our courses are designed to help you develop your skills and knowledge in a wide range of areas, from business and management to technology and design.</p>

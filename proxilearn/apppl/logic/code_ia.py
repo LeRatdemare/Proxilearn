@@ -1,12 +1,17 @@
+from django.conf import settings
 from apppl.models import Node, Student, Exercice, Trial
 import random
+import json
+import os
 
 class ExerciceLogic:
 
     EXERCICES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
-    FENETRE_D=10 # à choisir ou il existe une valeur pertienente ?
-    CHECK_THRESHOLD=0.7 # à choisir ou il existe une valeur pertienente ?
-    FAIL_THRESHOLD=-0.8 # à choisir ou il existe une valeur pertienente ?
+    FENETRE_D = 10
+    OLD_REWARDS_IMPORTANCE = 0.5
+    EXPLORATION_RATE = 0.1
+    ZPD_EXPANSION_THRESHOLD = 0.5
+    ACTIVITY_DEACTIVATING_THRESHOLD = 0.7
 
     def __init__(self, student, node):
         """
@@ -17,7 +22,7 @@ class ExerciceLogic:
         try:
             self.exercice = Exercice.objects.get(node=node, student=student)
         except Exercice.DoesNotExist:
-            self.exercice = Exercice.objects.create(node=node, student=student, state=Exercice.State.AVAILABLE)
+            self.exercice = Exercice.objects.create(node=node, student=student, state=Exercice.State.ACTIVE)
 
         self.category: Node.Category = self.exercice.node.category
         self.difficulty: Node.Difficulty = self.exercice.node.difficulty
@@ -113,7 +118,7 @@ class ExerciceLogic:
                     case Node.Difficulty.VERYHARD:
                         price_valid = False
                         while (price_valid == False) :
-                            priceA = random.choice(itemVeyDifficult)
+                            priceA = random.choice(itemVeryDifficult)
                             priceB = random.choice(change[:,3])
 
                         solution = calculate_solution(price, change)
@@ -250,42 +255,60 @@ class ExerciceLogic:
 
         return r
     
-    def update_exercices(self):
+    def update_qualities(self):
         """
-        Update the neighbors' states of the current exercice
-        according to its r_score.
+        Update the quality of the question type and the quality of the difficulty for this type.
         """
-        # Check if the exercice should be SUCCEED, FAILED or stay AVAILABLE
-        if self.exercice.r_score >= ExerciceLogic.CHECK_THRESHOLD:
-            self.exercice.state = Exercice.State.SUCCEED
-        elif self.exercice.r_score <= ExerciceLogic.FAIL_THRESHOLD:
-            self.exercice.state = Exercice.State.FAILED
-        self.exercice.save()
+        pass
 
-        if self.exercice.state == Exercice.State.SUCCEED:
-            # We first get the next UNAVAILABLE Exercice in same category to make it AVAILABLE
-            next_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__gt=self.difficulty).exclude(state=Exercice.State.AVAILABLE).order_by('-node__difficulty').first()
-            if next_exercice_same_category:
-                next_exercice_same_category.state = Exercice.State.AVAILABLE
-                next_exercice_same_category.save()
+    def update_zpd(self):
+        """
+        Update the ZPD of the student
+        """
+        pass
+
+    def set_current_exercice(self):
+        """
+        Set the current exercice to the student
+        """
+        pass
+
+    # def update_exercices(self):
+    #     """
+    #     Update the neighbors' states of the current exercice
+    #     according to its r_score.
+    #     """
+    #     # Check if the exercice should be SUCCEED, FAILED or stay AVAILABLE
+    #     if self.exercice.r_score >= ExerciceLogic.CHECK_THRESHOLD:
+    #         self.exercice.state = Exercice.State.DEACTIVATED
+    #     elif self.exercice.r_score <= ExerciceLogic.FAIL_THRESHOLD:
+    #         self.exercice.state = Exercice.State.FAILED
+    #     self.exercice.save()
+
+    #     if self.exercice.state == Exercice.State.DEACTIVATED:
+    #         # We first get the next UNAVAILABLE Exercice in same category to make it AVAILABLE
+    #         next_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__gt=self.difficulty).exclude(state=Exercice.State.ACTIVE).order_by('-node__difficulty').first()
+    #         if next_exercice_same_category:
+    #             next_exercice_same_category.state = Exercice.State.ACTIVE
+    #             next_exercice_same_category.save()
             
-        elif self.exercice.state == Exercice.State.FAILED:
-            # We find the previous exercice in the same category to make it AVAILABLE
-            previous_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__lt=self.difficulty).exclude(state=Exercice.State.AVAILABLE).order_by('node__difficulty').first()
-            if previous_exercice_same_category:
-                previous_exercice_same_category.state = Exercice.State.AVAILABLE
-                previous_exercice_same_category.save()
+    #     elif self.exercice.state == Exercice.State.FAILED:
+    #         # We find the previous exercice in the same category to make it AVAILABLE
+    #         previous_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__lt=self.difficulty).exclude(state=Exercice.State.ACTIVE).order_by('node__difficulty').first()
+    #         if previous_exercice_same_category:
+    #             previous_exercice_same_category.state = Exercice.State.ACTIVE
+    #             previous_exercice_same_category.save()
         
-        # In both cases we make another exercice of the same difficulty AVAILABLE 
-        if self.exercice.state == Exercice.State.SUCCEED or self.exercice.state == Exercice.State.FAILED:
-            other_exercices_same_difficulty = Exercice.objects.filter(student=self.exercice.student, node__difficulty=self.difficulty).exclude(node__category=self.category, state=Exercice.State.AVAILABLE)
-            if other_exercices_same_difficulty:
-                # We choose a random exercice
-                next_exercice_same_difficulty = random.choice(other_exercices_same_difficulty)
-                next_exercice_same_difficulty.state = Exercice.State.AVAILABLE
-                next_exercice_same_difficulty.save()
+    #     # In both cases we make another exercice of the same difficulty AVAILABLE 
+    #     if self.exercice.state == Exercice.State.DEACTIVATED or self.exercice.state == Exercice.State.FAILED:
+    #         other_exercices_same_difficulty = Exercice.objects.filter(student=self.exercice.student, node__difficulty=self.difficulty).exclude(node__category=self.category, state=Exercice.State.ACTIVE)
+    #         if other_exercices_same_difficulty:
+    #             # We choose a random exercice
+    #             next_exercice_same_difficulty = random.choice(other_exercices_same_difficulty)
+    #             next_exercice_same_difficulty.state = Exercice.State.ACTIVE
+    #             next_exercice_same_difficulty.save()
             
-        # TODO : Make sure that there is always at least 2 exercices AVAILABLE
+    #     # TODO : Make sure that there is always at least 2 exercices AVAILABLE
     
     def _convert_attempt_to_valid_input(attempt: str, type: Node.AnswerType) -> str:
         """
@@ -310,7 +333,7 @@ class ExerciceLogic:
         \n
         return: {str(question), str(solution), str(answer), str(answer_type), str(distance)}
         """
-        if self.exercice.state != Exercice.State.AVAILABLE:
+        if self.exercice.state != Exercice.State.ACTIVE:
             raise Exception("Exercice is not available")
         
         trial = dict(question)
@@ -325,8 +348,14 @@ class ExerciceLogic:
         # On met à jour le r_score de l'exercice
         self.update_r_score()
 
-        # On met à jour les exercices
-        self.update_exercices()
+        # On met à jour la qualité pour le type de l'exercice, ainsi que la qualité pour la difficulté correspondante
+        self.update_qualities()
+
+        # On met à jour la ZPD de l'étudiant
+        self.update_zpd()
+
+        # On sélectionne un nouvel exercice pour l'étudiant
+        self.set_current_exercice()
 
         return trial
 

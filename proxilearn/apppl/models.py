@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -25,35 +27,31 @@ class Node(models.Model):
     category = models.CharField(max_length=2, choices=Category, default=Category.TypeM)
     difficulty = models.IntegerField(choices=Difficulty, default=Difficulty.EASY)
     answer_type = models.CharField(max_length=1, choices=AnswerType, default=AnswerType.TEXT)
-    
-    rate_of_exploration =  
-    epsilon = np.random.uniform(0, 1)
+    default_quality = models.FloatField(default=0.0)
 
-    
     def __str__(self):
         return f"Catégorie : {self.category} ; Difficulté : {self.difficulty}"
 
-class Student(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
+class Student(AbstractUser):
+
+    username = models.CharField(max_length=150, unique=True, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} {self.surname}"
-
+        return f"{self.first_name} {self.last_name}"
+    
 class Exercice(models.Model):
 
     class State(models.TextChoices):
-            SUCCEED = 'S', _('SUCCEED') 
-            FAILED = 'F', _('FAILED')
-            AVAILABLE = 'A', _('AVAILABLE')
-            UNAVAILABLE = 'U',_('UNAVAILABLE')
+            DEACTIVATED = 'D', _('DEACTIVATED')
+            ACTIVE = 'A', _('ACTIVE')
+            UNEXPLORED = 'U',_('UNEXPLORED')
 
     id = models.AutoField(primary_key=True)
-    state = models.CharField(max_length=2, choices=State, default=State.UNAVAILABLE)
+    state = models.CharField(max_length=2, choices=State, default=State.UNEXPLORED)
     node = models.ForeignKey(Node, on_delete=models.PROTECT, related_name='exercices')
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='exercices')
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exercices')
     r_score = models.FloatField(blank=True, null=True)
+    is_current = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Exo{self.id} ==> {self.state}"
@@ -73,15 +71,15 @@ class Trial(models.Model):
 
 ################# SIGNALS #################
 
-@receiver(post_save, sender=Student)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_exercises_for_student(sender, instance, created, **kwargs):
     if created:
         # Si un student est créé, on crée pour ce student autant d'exercices qu'il existe de nodes
         exercises = []
         for node in Node.objects.all():
-            state = Exercice.State.UNAVAILABLE
+            state = Exercice.State.UNEXPLORED
             if node.category == Node.Category.TypeM and node.difficulty == Node.Difficulty.EASY:
-                state = Exercice.State.AVAILABLE
+                state = Exercice.State.ACTIVE
             exercises.append(Exercice(student=instance, node=node, state=state))
         Exercice.objects.bulk_create(exercises)
 

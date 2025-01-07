@@ -1,5 +1,7 @@
 {% extends 'base.html' %} {% block content %}
 
+<a href="{% url "index" %}">Retourner à l'accueil</a>
+
 <!-- On affiche la question à l'exercice 'exercice'-->
 <h2>Exercice</h2>
 <div class='question'>{{ question.question }} <br/><br/>

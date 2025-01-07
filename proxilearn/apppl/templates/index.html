@@ -1,11 +1,19 @@
 {% extends 'base.html' %} {% block content %}
 
 <!-- On affiche la liste des exercices passés par la vue dans la variable 'exercices'-->
-<h2>Exercices</h2>
+<h2>Exercices {% if user %}disponibles ({{ user }}){% else %}existants{% endif %}</h2>
 <ul>
-    {% for node in nodes %}
-        <li>{{ node }} | <a href="{% url "exercice" node.id 1 %}">try it</a></li>
+    {% if user %}
+    {% for exercice in exercices %}
+        {% if exercice.state == "A" %}
+        <li>{{ exercice.node }} | <a href="{% url "exercice" exercice.node.id user.id %}">try it as {{ user }}</a></li>
+        {% endif %}
     {% endfor %}
+    {% else %}
+    {% for node in nodes %}
+        <li>{{ node }}</li>
+    {% endfor %}
+    {% endif %}
 </ul>
 
 <h2>Etudiants</h2>
@@ -15,6 +23,7 @@
     {% endfor %}
 </ul>
 
+{% if user.is_superuser %}
 <h2>Formulaire pour ajouter un exercice</h2>
 <form action="/" method="post">
     {% csrf_token %}
@@ -23,7 +32,9 @@
     {{ formulaire_node.as_p }}
     <button type="submit">Ajouter</button>
 </form>
-
+{% elif user %}
+Coming soon...
+{% else %}
 <h2>Formulaire pour ajouter un étudiant</h2>
 <form action="/" method="post">
     {% csrf_token %}
@@ -32,4 +43,5 @@
     {{ formulaire_student.as_p }}
     <button type="submit">Ajouter</button>
 </form>
+{% endif %}
 {% endblock %}
