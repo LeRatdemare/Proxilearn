@@ -27,6 +27,7 @@ class Node(models.Model):
     difficulty = models.IntegerField(choices=Difficulty, default=Difficulty.EASY)
     answer_type = models.CharField(max_length=1, choices=AnswerType, default=AnswerType.TEXT)
     default_quality = models.FloatField(default=0.0)
+    default_probabilty = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"Catégorie : {self.category} ; Difficulté : {self.difficulty}"
@@ -34,6 +35,10 @@ class Node(models.Model):
 class Student(AbstractUser):
 
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
+    M_quality = models.FloatField(default=0.05)
+    MM_quality = models.FloatField(default=0.05)
+    R_quality = models.FloatField(default=0.0)
+    RM_quality = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -51,6 +56,7 @@ class Exercice(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exercices')
     r_score = models.FloatField(blank=True, null=True)
     is_current = models.BooleanField(default=False)
+    quality = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"Exo{self.id} ==> {self.state}"
