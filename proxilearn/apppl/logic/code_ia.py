@@ -259,18 +259,22 @@ class ExerciceLogic:
         """
         Update the quality of the question type and the quality of the difficulty for this type.
         """
+        vect_norm = exercises[diff][te]/
+        prob = vect_norm*(1-exploration_rate) + exploration_rate*epsilon
         pass
 
     def update_zpd(self):
         """
         Update the ZPD of the student
         """
+
         pass
 
     def set_current_exercice(self):
         """
         Set the current exercice to the student
         """
+
         pass
 
     # def update_exercices(self):
@@ -348,7 +352,8 @@ class ExerciceLogic:
         # On met à jour le r_score de l'exercice
         self.update_r_score()
 
-        # On met à jour la qualité pour le type de l'exercice, ainsi que la qualité pour la difficulté correspondante
+        # On met à jour la qualité pour le type de l'exercice, 
+        #ainsi que la qualité pour la difficulté correspondante
         self.update_qualities()
 
         # On met à jour la ZPD de l'étudiant
