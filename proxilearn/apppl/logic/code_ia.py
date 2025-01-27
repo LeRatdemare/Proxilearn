@@ -248,7 +248,7 @@ class ExerciceLogic:
         C=[]
         previous_trials = self.exercice.trials.all().order_by('-datetime')
         for trial in previous_trials:
-            distance = trial['distance']
+            distance = trial.distance
             C.append(1-distance)
         t=len(previous_trials)
 
@@ -351,7 +351,8 @@ class ExerciceLogic:
         # We check if we have to add a new exercice in the same category
         # For this, we calculate the mean of the r_scores for the category
         student: Student = self.exercice.student
-        category_r_scores = [exercice.r_score for exercice in Exercice.objects.filter(student=student, node__category=self.category)]
+        category_r_scores = [exercice.r_score for exercice in Exercice.objects.filter(student=student, node__category=self.category, state=Exercice.State.ACTIVE)]
+        print(f"Category r_scores: {category_r_scores}")
         mean_category_r_score = sum(category_r_scores) / len(category_r_scores)
         if mean_category_r_score >= ExerciceLogic.ZPD_EXPANSION_THRESHOLD:
             # We update activate the next exercice in the same category

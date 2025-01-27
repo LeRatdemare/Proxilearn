@@ -19,8 +19,8 @@ def generate_default_qualities():
     return {
         'M': 0.05,
         'MM': 0.05,
-        'R': 0.0,
-        'RM': 0.0
+        'R': 0.05,
+        'RM': 0.05
     }
 
 
@@ -48,8 +48,7 @@ class Node(models.Model):
     category = models.CharField(max_length=2, choices=Category, default=Category.TypeM)
     difficulty = models.IntegerField(choices=Difficulty, default=Difficulty.EASY)
     answer_type = models.CharField(max_length=1, choices=AnswerType, default=AnswerType.TEXT)
-    default_quality = models.FloatField(default=0.0)
-    default_probabilty = models.FloatField(default=0.0)
+    default_quality = models.FloatField(default=0.05)
 
     def __str__(self):
         return f"Catégorie : {self.category} ; Difficulté : {self.difficulty}"
@@ -74,7 +73,7 @@ class Exercice(models.Model):
     state = models.CharField(max_length=2, choices=State, default=State.UNEXPLORED)
     is_current = models.BooleanField(default=False)
     r_score = models.FloatField(blank=True, null=True)
-    quality = models.FloatField(default=0.0)
+    quality = models.FloatField(default=0.05)
     node = models.ForeignKey(Node, on_delete=models.PROTECT, related_name='exercices')
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exercices')
 
@@ -109,11 +108,11 @@ def create_exercises_for_student(sender, instance, created, **kwargs):
             exercises.append(Exercice(student=instance, node=node, state=state, quality=quality))
         Exercice.objects.bulk_create(exercises)
 
-@receiver(post_save, sender=Node)
-def create_exercises_for_node(sender, instance, created, **kwargs):
-    if created:
-        # Si un node est créé, on crée pour chaque student un exercice
-        exercises = []
-        for student in Student.objects.all():
-            exercises.append(Exercice(student=student, node=instance))
-        Exercice.objects.bulk_create(exercises)
+# @receiver(post_save, sender=Node)
+# def create_exercises_for_node(sender, instance, created, **kwargs):
+#     if created:
+#         # Si un node est créé, on crée pour chaque student un exercice
+#         exercises = []
+#         for student in Student.objects.all():
+#             exercises.append(Exercice(student=student, node=instance))
+#         Exercice.objects.bulk_create(exercises)

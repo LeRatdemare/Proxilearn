@@ -16,6 +16,11 @@
     {% endif %}
 </ul>
 
+<form method="get" action="{% url 'exercice' user.id %}">
+    {% csrf_token %}
+    <button type="submit">Go to Exercice</button>
+</form>
+
 <h2>Etudiants</h2>
 <ul>
     {% for student in students %}
@@ -24,24 +29,27 @@
 </ul>
 
 {% if user.is_superuser %}
-<h2>Formulaire pour ajouter un exercice</h2>
-<form action="/" method="post">
-    {% csrf_token %}
-    <input type="hidden" name="node" value="-1">
-    <!-- On utilise le ExerciceForm passé par la vue dans la variable 'formulaire'-->
-    {{ formulaire_node.as_p }}
-    <button type="submit">Ajouter</button>
-</form>
-{% elif user %}
-Coming soon...
-{% else %}
-<h2>Formulaire pour ajouter un étudiant</h2>
-<form action="/" method="post">
-    {% csrf_token %}
-    <!-- On utilise le ExerciceForm passé par la vue dans la variable 'formulaire_student'-->
-     <input type="hidden" name="student" value="-1">
-    {{ formulaire_student.as_p }}
-    <button type="submit">Ajouter</button>
-</form>
+    <h2>Formulaire pour ajouter un exercice</h2>
+    <form action="/" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="node" value="-1">
+        {{ formulaire_node.as_p }}
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <h2>Formulaire pour ajouter un étudiant</h2>
+    <form action="/" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="student" value="-1">
+        {{ formulaire_student.as_p }}
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <h2>Bombe nucléaire</h2>
+    <form action="{% url 'reset_all' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">BOOUUUUM</button>
+    </form>
 {% endif %}
+
 {% endblock %}

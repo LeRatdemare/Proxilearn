@@ -9,7 +9,7 @@ Tu disposes dans ton porte monnaiec de pièces de 1 et 2 € et de 50, 20 et 10 
 Tu as également des billets de 5, 10 et 20 €.
 ps : la réponse attendue est de type '{{ node.answer_type }}'</div><br/>
 
-<form action="{% url 'exercice' node.id student.id %}" method="post">
+<form action="{% url 'exercice' student.id %}" method="post">
     {% csrf_token %}
     
     <input type="hidden" name="question" value="{{ question.question }}">
