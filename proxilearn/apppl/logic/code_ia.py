@@ -2,6 +2,7 @@ from django.conf import settings
 from apppl.models import Node, Student, Exercice, Trial
 import random
 import numpy as np
+from datetime import datetime
 
 class ExerciceLogic:
 
@@ -53,14 +54,15 @@ class ExerciceLogic:
                 self.category_quality = student.RM_quality
         
         print(f"Preparing exercice for {student} of category {self.category} and difficulty {self.difficulty}")
-        self.previous_trials: list[dict[str, str, str, float]] = [] # [{question, solution, answer, distance}, ...]
+        self.previous_trials: list[dict[str, str, str, float, datetime]] = [] # [{question, solution, answer, distance, datetime}, ...]
         
         for trial in self.exercice.trials.all():
             self.previous_trials.append({
                 'question': trial.question,
                 'solution': trial.solution,
                 'answer': trial.student_answer,
-                'distance': trial.distance
+                'distance': trial.distance,
+                'datetime': trial.datetime
             })
 
     def generate_question(self) -> dict[str, str]:
@@ -250,9 +252,9 @@ class ExerciceLogic:
             return 0
         return 1
     
-    def update_r_score(self, d:int = FENETRE_D) -> int:
+    def update_exercice_r_score(self) -> int:
         """
-        calculer une mesure de la qualité de chaque activité, 
+        Calculer une mesure du reward de chaque activité, 
         mesurer combien de progrès a une activité prévue dans une fenêtre de temps récent.
         parameters:
             - Ck, 
@@ -262,7 +264,7 @@ class ExerciceLogic:
         return: la progression de l’apprentissage, r
         """
         r=0
-        
+        d = ExerciceLogic.FENETRE_D
         C=[]
         for trial in self.previous_trials:
             distance = trial['distance']
@@ -281,12 +283,40 @@ class ExerciceLogic:
 
         return r
     
+    def update_category_r_score(self):
+        """
+        Update the r_score of the student for the category of the current exercice.
+        """
+        # We retrieve all the trials of the student for the category
+        trials = Trial.objects.filter(exercice__student=self.exercice.student, exercice__node__category=self.category).order_by('-datetime')
+        # We calculate the r_score for the category
+        r_score = 0
+        d = ExerciceLogic.FENETRE_D
+        C = []
+        for trial in trials:
+            distance = trial.distance
+            C.append(1-distance)
+        t = len(trials)
+
+        for k in range(max(0, int(t-d/2)), t):
+            r_score += (C[k]) / (d/2)
+        for k in range(max(0, t-d), min(1, int(t-d/2))):
+            r_score -= (C[k]) / (d/2)
+        
+        # We update the r_score of the student for the category
+        student: Student = self.exercice.student
+        student.r_scores[self.category] = r_score
+        student.save()
+        
+
     def update_qualities(self):
         """
         Update the quality of the question type and the quality of the difficulty for this type.
         """
         # We first update the category quality
+        category_qualities = {
 
+        }
         # Then we update the exercice quality
         pass
 
@@ -296,18 +326,15 @@ class ExerciceLogic:
         Requires all the qualities of the student to be updated.
         """
         # Retrieve the student to get its category qualities
-        student = self.exercice.student
+        student: Student = self.exercice.student
 
         # Sample a category using the qualities
-        category_qualities = {
-            Node.Category.TypeM: student.M_quality,
-            Node.Category.TypeMM: student.MM_quality,
-            Node.Category.TypeR: student.R_quality,
-            Node.Category.TypeRM: student.RM_quality
-        }
+        category_qualities: dict = student.qualities
         category_probabilities = dict()
+        total_category_quality = sum(category_qualities.values())
+
         for category, quality in category_qualities.items():
-            quality = quality / sum(category_qualities.values()) # Normalize the qualities
+            quality = quality / total_category_quality # Normalize the qualities
             category_probabilities[category] = quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
         # We sample a random category using the probabilities
         category = np.random.choice(list(category_probabilities.keys()), p=list(category_probabilities.values()))
@@ -413,8 +440,11 @@ class ExerciceLogic:
         self.previous_trials.append(trial)
 
         # On met à jour le r_score de l'exercice
-        self.update_r_score()
+        self.update_exercice_r_score()
 
+        # On met à jour le r_score de la catégorie de l'exercice
+        self.update_category_r_score()
+        
         # On met à jour la qualité pour le type de l'exercice, ainsi que la qualité pour la difficulté correspondante
         self.update_qualities() # Besoin du r_score
 

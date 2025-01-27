@@ -5,6 +5,28 @@ from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+######################## USEFUL METHODS
+
+def generate_default_r_scores():
+    return {
+        'M': 0.0,
+        'MM': 0.0,
+        'R': 0.0,
+        'RM': 0.0
+    }
+
+def generate_default_qualities():
+    return {
+        'M': 0.05,
+        'MM': 0.05,
+        'R': 0.0,
+        'RM': 0.0
+    }
+
+
+######################## MODELS
+
+
 # Create your models here.
 class Node(models.Model):
 
@@ -35,11 +57,9 @@ class Node(models.Model):
 class Student(AbstractUser):
 
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
-    M_quality = models.FloatField(default=0.05)
-    MM_quality = models.FloatField(default=0.05)
-    R_quality = models.FloatField(default=0.0)
-    RM_quality = models.FloatField(default=0.0)
-
+    r_scores = models.JSONField(default=generate_default_r_scores)
+    qualities = models.JSONField(default=generate_default_qualities)
+    
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
     
@@ -63,7 +83,7 @@ class Exercice(models.Model):
 
 class Trial(models.Model):
     id = models.AutoField(primary_key=True)
-    date = models.DateField(auto_now=False, auto_now_add=True)
+    datetime = models.DateTimeField(auto_now=False, auto_now_add=True)
     question = models.CharField(max_length=255, blank=False, null=False)
     solution = models.CharField(max_length=255, blank=False, null=False)
     student_answer = models.CharField(max_length=255, blank=False, null=False)

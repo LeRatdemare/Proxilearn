@@ -13,8 +13,8 @@ class ExerciceAdmin(admin.ModelAdmin):
     search_fields = ['state', 'node', 'student']
 
 class TrialAdmin(admin.ModelAdmin):
-    list_display = ('id', 'exercice', 'date', 'question', 'solution', 'student_answer', 'distance')
-    search_fields = ['exercice', 'date', 'question', 'solution', 'student_answer']
+    list_display = ('id', 'exercice', 'datetime', 'question', 'solution', 'student_answer', 'distance')
+    search_fields = ['exercice', 'datetime', 'question', 'solution', 'student_answer']
 
 admin.site.register(Node, NodeAdmin)
 admin.site.register(Student, UserAdmin)
