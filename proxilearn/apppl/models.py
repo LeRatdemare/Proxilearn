@@ -57,7 +57,7 @@ class Node(models.Model):
 class Student(AbstractUser):
 
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
-    r_scores = models.JSONField(default=generate_default_r_scores)
+    r_scores = models.JSONField(default=generate_default_r_scores) # N'est pas à préciser lorsqu'on crée un student à la main 
     qualities = models.JSONField(default=generate_default_qualities)
     
     def __str__(self):
@@ -105,7 +105,8 @@ def create_exercises_for_student(sender, instance, created, **kwargs):
             state = Exercice.State.UNEXPLORED
             if node.category == Node.Category.TypeM and node.difficulty == Node.Difficulty.EASY:
                 state = Exercice.State.ACTIVE
-            exercises.append(Exercice(student=instance, node=node, state=state))
+                quality = 0.05
+            exercises.append(Exercice(student=instance, node=node, state=state, quality=quality))
         Exercice.objects.bulk_create(exercises)
 
 @receiver(post_save, sender=Node)
