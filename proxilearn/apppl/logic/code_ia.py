@@ -1,8 +1,7 @@
 from django.conf import settings
 from apppl.models import Node, Student, Exercice, Trial
 import random
-import json
-import os
+import numpy as np
 
 class ExerciceLogic:
 
@@ -291,10 +290,40 @@ class ExerciceLogic:
         # Then we update the exercice quality
         pass
 
-    def update_probabilities(self):
+    def update_current_exercice(self):
         """
-        Update the probabilities of each parameter (category and difficulty given a category)
+        Update the current exercice of the student.
+        Requires all the qualities of the student to be updated.
         """
+        # Retrieve the student to get its category qualities
+        student = self.exercice.student
+
+        # Sample a category using the qualities
+        category_qualities = {
+            Node.Category.TypeM: student.M_quality,
+            Node.Category.TypeMM: student.MM_quality,
+            Node.Category.TypeR: student.R_quality,
+            Node.Category.TypeRM: student.RM_quality
+        }
+        category_probabilities = dict()
+        for category, quality in category_qualities.items():
+            category_probabilities[category] = quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
+        # We sample a random category using the probabilities
+        category = np.random.choice(list(category_probabilities.keys()), p=list(category_probabilities.values()))
+
+        # Retrieve all the exercices of the student in the category
+        exercices = Exercice.objects.filter(student=self.exercice.student, node__category=category)
+
+        exercices_probabilities = dict()
+        for exercice in exercices:
+            exercices_probabilities[exercice] = exercice.quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
+        # We sample a random exercice using the probabilities
+        exercice: Exercice = np.random.choice(list(exercices_probabilities.keys()), p=list(exercices_probabilities.values()))
+        exercice.is_current = True
+        # We set is_current to FALSE for every exercice of the student except the one we just sampled
+        Exercice.objects.filter(student=self.exercice.student).exclude(node=exercice.node).update(is_current=False)
+
+        exercice.save()
 
     def update_zpd(self):
         """
@@ -388,7 +417,7 @@ class ExerciceLogic:
         self.update_qualities() # Besoin du r_score
 
         # On met à jour les probabilités de chaque paramètre (category ET difficulty étant donné une category)
-        self.update_probabilities() # Besoin de la qualité
+        self.update_current_exercice() # Besoin de la qualité
 
         # On met à jour la ZPD de l'étudiant
         self.update_zpd() # Besoin du r_score (en vrai c'est SR=Success Rate mais on simplifie)
