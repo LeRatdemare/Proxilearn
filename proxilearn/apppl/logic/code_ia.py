@@ -307,6 +307,7 @@ class ExerciceLogic:
         }
         category_probabilities = dict()
         for category, quality in category_qualities.items():
+            quality = quality / sum(category_qualities.values()) # Normalize the qualities
             category_probabilities[category] = quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
         # We sample a random category using the probabilities
         category = np.random.choice(list(category_probabilities.keys()), p=list(category_probabilities.values()))
@@ -316,7 +317,8 @@ class ExerciceLogic:
 
         exercices_probabilities = dict()
         for exercice in exercices:
-            exercices_probabilities[exercice] = exercice.quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
+            normalized_quality = exercice.quality / sum([e.quality for e in exercices])
+            exercices_probabilities[exercice] = normalized_quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
         # We sample a random exercice using the probabilities
         exercice: Exercice = np.random.choice(list(exercices_probabilities.keys()), p=list(exercices_probabilities.values()))
         exercice.is_current = True
