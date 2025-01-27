@@ -35,21 +35,19 @@ def index(request):
         'formulaire_student': formulaire_student,
         'user': user,
     }
-    
+
     learning = True
     while learning == True :
         learning = False
 
     return render(request, 'index.html', context)
 
-def exercice(request, node_id, student_id):
+def exercice(request, student_id):
         user = request.user if request.user.is_authenticated else None
 
-        print(f"Exercice {node_id} pour l'étudiant {student_id}")
-        node = Node.objects.get(pk=node_id)
         student = Student.objects.get(pk=student_id)
-
-        exercice = Exercice.objects.get(node=node, student=student)
+        exercice = Exercice.objects.get(student=student, is_current=True)
+        node = Node.objects.get(pk=exercice.node_id)
         
         # Si l'exercice n'est pas disponible, on redirige vers l'accueil
         if exercice.state != Exercice.State.ACTIVE:

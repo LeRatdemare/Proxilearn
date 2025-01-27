@@ -13,6 +13,20 @@ class ExerciceLogic:
     ZPD_EXPANSION_THRESHOLD = 0.5
     ACTIVITY_DEACTIVATING_THRESHOLD = 0.7
 
+    # @classmethod
+    # def load_constants(cls):
+    #     constants_file = os.path.join(settings.BASE_DIR, 'data', 'constantes.json')
+    #     with open(constants_file, 'r') as file:
+    #         constants = json.load(file)
+
+    #     cls.FENETRE_D = constants.get('FENETRE_D', 10)
+    #     cls.OLD_REWARDS_IMPORTANCE = constants.get('OLD_REWARDS_IMPORTANCE', 0.5)
+    #     cls.EXPLORATION_RATE = constants.get('EXPLORATION_RATE', 0.1)
+    #     cls.ZPD_EXPANSION_THRESHOLD = constants.get('ZPD_EXPANSION_THRESHOLD', 0.5)
+    #     cls.ACTIVITY_DEACTIVATING_THRESHOLD = constants.get('ACTIVITY_DEACTIVATING_THRESHOLD', 0.7)
+
+    # load_constants()
+
     def __init__(self, student, node):
         """
         parameters:
@@ -26,6 +40,19 @@ class ExerciceLogic:
 
         self.category: Node.Category = self.exercice.node.category
         self.difficulty: Node.Difficulty = self.exercice.node.difficulty
+        
+        self.quality: float = self.exercice.quality
+
+        match self.category:
+            case Node.Category.TypeM:
+                self.category_quality = student.M_quality
+            case Node.Category.TypeMM:
+                self.category_quality = student.MM_quality
+            case Node.Category.TypeR:
+                self.category_quality = student.R_quality
+            case Node.Category.TypeRM:
+                self.category_quality = student.RM_quality
+        
         print(f"Preparing exercice for {student} of category {self.category} and difficulty {self.difficulty}")
         self.previous_trials: list[dict[str, str, str, float]] = [] # [{question, solution, answer, distance}, ...]
         
@@ -263,16 +290,21 @@ class ExerciceLogic:
         prob = vect_norm*(1-exploration_rate) + exploration_rate*epsilon
         pass
 
-    def update_zpd(self):
+    def update_probabilities(self):
         """
-        Update the ZPD of the student
+        Update the probabilities of each parameter (category and difficulty given a category)
         """
 
+    def update_zpd(self):
+        """
+        Update the ZPD of the student.
+        """
+        # We first check if the global
         pass
 
     def set_current_exercice(self):
         """
-        Set the current exercice to the student
+        Among all the exercices available, choose the one with the highest probability and set it as the current exercice
         """
 
         pass
@@ -352,15 +384,17 @@ class ExerciceLogic:
         # On met à jour le r_score de l'exercice
         self.update_r_score()
 
-        # On met à jour la qualité pour le type de l'exercice, 
-        #ainsi que la qualité pour la difficulté correspondante
-        self.update_qualities()
+        # On met à jour la qualité pour le type de l'exercice, ainsi que la qualité pour la difficulté correspondante
+        self.update_qualities() # Besoin du r_score
+
+        # On met à jour les probabilités de chaque paramètre (category ET difficulty étant donné une category)
+        self.update_probabilities() # Besoin de la qualité
 
         # On met à jour la ZPD de l'étudiant
-        self.update_zpd()
+        self.update_zpd() # Besoin du r_score (en vrai c'est SR=Success Rate mais on simplifie)
 
         # On sélectionne un nouvel exercice pour l'étudiant
-        self.set_current_exercice()
+        self.set_current_exercice() # Besoin de la proba
 
         return trial
 
