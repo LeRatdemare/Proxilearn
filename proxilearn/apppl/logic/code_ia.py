@@ -198,25 +198,21 @@ class ExerciceLogic:
                     solution = sum(change_client) - total_price
                     return question, solution, answer_type
 
+                priceA = random.choice(itemEasy + itemDifficult)
+                priceB = random.choice(itemEasy + itemDifficult)
                 # Dans le match statement
                 match self.difficulty:
                     case Node.Difficulty.EASY:
-                        priceA = random.choice(itemEasy + itemDifficult)
-                        priceB = random.choice(itemEasy + itemDifficult)
                         question, solution, answer_type = generate_multi_item_change_question(
                             priceA, priceB, change, itemEasy, Node.AnswerType.INTEGER
                         )
 
                     case Node.Difficulty.HARD:
-                        priceA = random.choice(itemEasy + itemDifficult)
-                        priceB = random.choice(itemEasy + itemDifficult)
                         question, solution, answer_type = generate_multi_item_change_question(
                             priceA, priceB, change, itemDifficult, Node.AnswerType.LIST
                         )
 
                     case Node.Difficulty.VERYHARD:
-                        priceA = random.choice(itemEasy + itemDifficult)
-                        priceB = random.choice(itemEasy + itemDifficult)
                         question, solution, answer_type = generate_multi_item_change_question(
                             priceA, priceB, change, itemVeryDifficult, Node.AnswerType.LIST
                         )
