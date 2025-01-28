@@ -23,6 +23,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('exercice/<int:node_id>/<int:student_id>/', views.exercice, name='exercice'),
+    path('exercice/<int:student_id>/', views.exercice, name='exercice'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('reset_all/', views.reset_all, name='reset_all'),
 ]

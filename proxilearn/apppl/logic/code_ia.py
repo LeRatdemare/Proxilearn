@@ -1,8 +1,8 @@
 from django.conf import settings
 from apppl.models import Node, Student, Exercice, Trial
 import random
-import json
-import os
+import numpy as np
+from datetime import datetime
 
 class ExerciceLogic:
 
@@ -10,8 +10,11 @@ class ExerciceLogic:
     FENETRE_D = 10
     OLD_REWARDS_IMPORTANCE = 0.5
     EXPLORATION_RATE = 0.1
-    ZPD_EXPANSION_THRESHOLD = 0.5
-    ACTIVITY_DEACTIVATING_THRESHOLD = 0.7
+    ZPD_EXERCISE_EXPANSION_THRESHOLD = 0.65
+    ZPD_CATEGORY_EXPANSION_THRESHOLD = 0.50
+    ACTIVITY_DEACTIVATING_THRESHOLD = 0.9
+    MIN_NB_TRIALS_BEFORE_DEACTIVATING = 8
+    DEFAULT_QUALITY = 0.2
 
     # @classmethod
     # def load_constants(cls):
@@ -41,28 +44,7 @@ class ExerciceLogic:
         self.category: Node.Category = self.exercice.node.category
         self.difficulty: Node.Difficulty = self.exercice.node.difficulty
         
-        self.quality: float = self.exercice.quality
-
-        match self.category:
-            case Node.Category.TypeM:
-                self.category_quality = student.M_quality
-            case Node.Category.TypeMM:
-                self.category_quality = student.MM_quality
-            case Node.Category.TypeR:
-                self.category_quality = student.R_quality
-            case Node.Category.TypeRM:
-                self.category_quality = student.RM_quality
-        
         print(f"Preparing exercice for {student} of category {self.category} and difficulty {self.difficulty}")
-        self.previous_trials: list[dict[str, str, str, float]] = [] # [{question, solution, answer, distance}, ...]
-        
-        for trial in self.exercice.trials.all():
-            self.previous_trials.append({
-                'question': trial.question,
-                'solution': trial.solution,
-                'answer': trial.student_answer,
-                'distance': trial.distance
-            })
 
     def generate_question(self) -> dict[str, str]:
         """
@@ -83,13 +65,13 @@ class ExerciceLogic:
             # Calcule la solution en décomposant le prix avec les valeurs disponibles dans change.
             solution = []
             left_to_pay = price
-            i = len(change) - 1  # Commence par la plus grande valeur de "change"
-            while left_to_pay > 0:
+            i = 0
+            while i < len(change) and left_to_pay > 0:
                 if left_to_pay - change[i] >= 0:
                     left_to_pay -= change[i]
                     solution.append(change[i])
                 else:
-                    i -= 1  # Passe à une valeur plus petite si la valeur actuelle est trop grande
+                    i += 1  # Passe à une valeur plus petite si la valeur actuelle est trop grande
             return solution
 
         match self.category:
@@ -103,6 +85,7 @@ class ExerciceLogic:
 
                     case Node.Difficulty.HARD:
                         price = random.choice(itemDifficult)
+                        print(f"Price: {price}")
                         answer_type = Node.AnswerType.LIST
                         solution = calculate_solution(price, change)
 
@@ -251,101 +234,174 @@ class ExerciceLogic:
             return 0
         return 1
     
-    def update_r_score(self, d:int = FENETRE_D) -> int:
+    def update_exercice_r_score(self) -> int:
         """
-        calculer une mesure de la qualité de chaque activité, 
+        Calculer une mesure du reward de chaque activité, 
         mesurer combien de progrès a une activité prévue dans une fenêtre de temps récent.
         parameters:
-            - Ck, 
+            - Ck, entre 0 et 1, si proche de 1, l’activité est réussie
             - k, le moment où on calcule la PDA
             - t, nombre total d’exercices effectués 
             - d, le nombre d’exercices retenus pour la comparaison
         return: la progression de l’apprentissage, r
         """
         r=0
-        
+        d = ExerciceLogic.FENETRE_D
         C=[]
-        for trial in self.previous_trials:
-            distance = trial['distance']
+        previous_trials = self.exercice.trials.all().order_by('datetime')
+        print(f"Calculation of r_score for exercice {self.exercice} with {len(previous_trials)} previous trials")
+        for i,trial in enumerate(previous_trials):
+            distance = trial.distance
             C.append(1-distance)
-        t=len(self.previous_trials)
+            print(f"i={i} ; distance={distance} ; C[i]={C[i]}")
+        t=len(previous_trials)
 
         for k in range(max(0,int(t-d/2)),t):
-            print(f"Bonus part ===> t={t}, k={k}, d={d}")
             r+=(C[k])/(d/2)
+            print(f"r={r} ; k={k} ; C[k]={C[k]}")
         for k in range(max(0,t-d),min(1,int(t-d/2))):
-            print(f"Malus part ===> t={t}, k={k}, d={d}")
             r-=(C[k])/(d/2)
+            print(f"r={r} ; k={k} ; C[k]={C[k]}")
         
         self.exercice.r_score = r
         self.exercice.save()
-
         return r
     
+    def update_category_r_score(self):
+        """
+        Update the r_score of the student for the category of the current exercice.
+        """
+        # We retrieve all the trials of the student for the category in active exercices
+        trials = Trial.objects.filter(exercice__student=self.exercice.student, exercice__node__category=self.category, exercice__state=Exercice.State.ACTIVE).order_by('datetime')
+        print(f"Calculation of r_score for category {self.category} with {len(trials)} previous trials")
+        # We calculate the r_score for the category
+        r_score = 0
+        d = ExerciceLogic.FENETRE_D
+        C = []
+        for trial in trials:
+            distance = trial.distance
+            C.append(1-distance)
+        t = len(trials)
+
+        for k in range(max(0, int(t-d/2)), t):
+            print(f"r_score={r_score} ; k={k} ; C[k]={C[k]}")
+            r_score += (C[k]) / (d/2)
+        for k in range(max(0, t-d), min(1, int(t-d/2))):
+            r_score -= (C[k]) / (d/2)
+            print(f"r_score={r_score} ; k={k} ; C[k]={C[k]}")
+        
+        # We update the r_score of the student for the category
+        student: Student = self.exercice.student
+        student.r_scores[self.category] = r_score
+        student.save()
+        return r_score
+
     def update_qualities(self):
         """
         Update the quality of the question type and the quality of the difficulty for this type.
+        Requires the r_score of the exercice to be updated.
         """
-        vect_norm = exercises[diff][te]/
-        prob = vect_norm*(1-exploration_rate) + exploration_rate*epsilon
-        pass
+        # We first update the category quality
+        student: Student = self.exercice.student
+        student.qualities[self.category] = ExerciceLogic.OLD_REWARDS_IMPORTANCE * student.qualities[self.category] + (1-ExerciceLogic.OLD_REWARDS_IMPORTANCE) * student.r_scores[self.category]
+        student.save()
+        # Then we update the exercice quality
+        self.exercice.quality = ExerciceLogic.OLD_REWARDS_IMPORTANCE * self.exercice.quality + (1-ExerciceLogic.OLD_REWARDS_IMPORTANCE) * self.exercice.r_score
+        self.exercice.save()
+        return (student.qualities[self.category], self.exercice.quality)
 
-    def update_probabilities(self):
+    def update_current_exercice(self):
         """
-        Update the probabilities of each parameter (category and difficulty given a category)
+        Update the current exercice of the student.
+        Requires all the qualities of the student to be updated.
         """
+        # Retrieve the student to get its category qualities
+        student: Student = self.exercice.student
+
+        # Sample a category using the qualities
+        active_categories = [exercice.node.category for exercice in Exercice.objects.filter(student=student, state=Exercice.State.ACTIVE)]
+        active_categories_qualities: dict = student.qualities
+        # We only keep the qualities of the active categories
+        active_categories_qualities = {category: quality for category, quality in active_categories_qualities.items() if category in active_categories}
+        active_category_probabilities = dict()
+        total_category_quality = sum(active_categories_qualities.values())
+
+        for category, quality in active_categories_qualities.items():
+            quality /= total_category_quality # Normalize the qualities
+            active_category_probabilities[category] = quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
+        # We normalize the probabilities
+        total_probabilities = sum(active_category_probabilities.values())
+        for category in active_category_probabilities:
+            active_category_probabilities[category] /= total_probabilities
+        # We sample a random category using the probabilities
+        sampled_category = np.random.choice(list(active_category_probabilities.keys()), p=list(active_category_probabilities.values()))
+
+        # Retrieve all the exercices of the student in the category
+        exercices = Exercice.objects.filter(student=self.exercice.student, node__category=sampled_category, state=Exercice.State.ACTIVE)
+
+        exercices_probabilities = dict()
+        for exercice in exercices:
+            normalized_quality = exercice.quality / sum([e.quality for e in exercices])
+            exercices_probabilities[exercice] = normalized_quality * (1-ExerciceLogic.EXPLORATION_RATE) + ExerciceLogic.EXPLORATION_RATE * np.random.uniform(0, 1)
+        # We normalize the probabilities
+        total_probabilities = sum(exercices_probabilities.values())
+        for exercice in exercices_probabilities:
+            exercices_probabilities[exercice] /= total_probabilities
+        # We sample a random exercice using the probabilities
+        exercice: Exercice = np.random.choice(list(exercices_probabilities.keys()), p=list(exercices_probabilities.values()))
+        # We set is_current to FALSE for every exercice of the student except the one we just sampled
+        Exercice.objects.filter(student=self.exercice.student).update(is_current=False)
+
+        exercice.is_current = True
+        exercice.save()
+
+        return exercice
 
     def update_zpd(self):
         """
         Update the ZPD of the student.
         """
-        # We first check if the global
-        pass
+        ### We first handle the ZPD expansion
 
-    def set_current_exercice(self):
-        """
-        Among all the exercices available, choose the one with the highest probability and set it as the current exercice
-        """
+        # For this, we get all the r_scores for the category and for all the active exercices
+        student: Student = self.exercice.student
+        category_r_scores = [exercice.r_score for exercice in Exercice.objects.filter(student=student, node__category=self.category, state=Exercice.State.ACTIVE)]
+        all_active_student_r_scores = [exercice.r_score for exercice in Exercice.objects.filter(student=student, state=Exercice.State.ACTIVE)]
 
-        pass
+        ## We check if we have to add a new exercice in the same category
+        print(f"Category r_scores: {category_r_scores}")
+        mean_category_r_score = sum(category_r_scores) / len(category_r_scores)
+        if mean_category_r_score >= ExerciceLogic.ZPD_EXERCISE_EXPANSION_THRESHOLD:
+            # We update activate the next exercice in the same category
+            next_exercice_same_category = Exercice.objects.filter(student=student, node__category=self.category, node__difficulty__gt=self.difficulty, state=Exercice.State.UNEXPLORED).order_by('node__difficulty').first()
+            if next_exercice_same_category:
+                next_exercice_same_category.state = Exercice.State.ACTIVE
+                next_exercice_same_category.quality = ExerciceLogic.DEFAULT_QUALITY
+                next_exercice_same_category.save()
 
-    # def update_exercices(self):
-    #     """
-    #     Update the neighbors' states of the current exercice
-    #     according to its r_score.
-    #     """
-    #     # Check if the exercice should be SUCCEED, FAILED or stay AVAILABLE
-    #     if self.exercice.r_score >= ExerciceLogic.CHECK_THRESHOLD:
-    #         self.exercice.state = Exercice.State.DEACTIVATED
-    #     elif self.exercice.r_score <= ExerciceLogic.FAIL_THRESHOLD:
-    #         self.exercice.state = Exercice.State.FAILED
-    #     self.exercice.save()
+        ## We check if we have to open a new category
+        print(f"All active student r_scores: {all_active_student_r_scores}")
+        mean_active_r_score = sum(all_active_student_r_scores) / len(all_active_student_r_scores)
+        if mean_active_r_score >= ExerciceLogic.ZPD_CATEGORY_EXPANSION_THRESHOLD:
+            # We randomly activate a new category among the ones that do not have active exercices
+            categories: list = student.qualities.keys()
+            active_categories = [exercice.node.category for exercice in Exercice.objects.filter(student=student, state=Exercice.State.ACTIVE)]
+            inactive_categories = [category for category in categories if category not in active_categories]
+            if inactive_categories:
+                new_category = np.random.choice(inactive_categories)
+                new_exercice = Exercice.objects.filter(student=student, node__category=new_category).order_by('node__difficulty').first()
+                new_exercice.state = Exercice.State.ACTIVE
+                new_exercice.quality = ExerciceLogic.DEFAULT_QUALITY
+                new_exercice.save()
 
-    #     if self.exercice.state == Exercice.State.DEACTIVATED:
-    #         # We first get the next UNAVAILABLE Exercice in same category to make it AVAILABLE
-    #         next_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__gt=self.difficulty).exclude(state=Exercice.State.ACTIVE).order_by('-node__difficulty').first()
-    #         if next_exercice_same_category:
-    #             next_exercice_same_category.state = Exercice.State.ACTIVE
-    #             next_exercice_same_category.save()
-            
-    #     elif self.exercice.state == Exercice.State.FAILED:
-    #         # We find the previous exercice in the same category to make it AVAILABLE
-    #         previous_exercice_same_category = Exercice.objects.filter(student=self.exercice.student, node__category=self.category, node__difficulty__lt=self.difficulty).exclude(state=Exercice.State.ACTIVE).order_by('node__difficulty').first()
-    #         if previous_exercice_same_category:
-    #             previous_exercice_same_category.state = Exercice.State.ACTIVE
-    #             previous_exercice_same_category.save()
-        
-    #     # In both cases we make another exercice of the same difficulty AVAILABLE 
-    #     if self.exercice.state == Exercice.State.DEACTIVATED or self.exercice.state == Exercice.State.FAILED:
-    #         other_exercices_same_difficulty = Exercice.objects.filter(student=self.exercice.student, node__difficulty=self.difficulty).exclude(node__category=self.category, state=Exercice.State.ACTIVE)
-    #         if other_exercices_same_difficulty:
-    #             # We choose a random exercice
-    #             next_exercice_same_difficulty = random.choice(other_exercices_same_difficulty)
-    #             next_exercice_same_difficulty.state = Exercice.State.ACTIVE
-    #             next_exercice_same_difficulty.save()
-            
-    #     # TODO : Make sure that there is always at least 2 exercices AVAILABLE
-    
+        ### Then we handle the deletion of the activities that are not in the ZPD anymore
+        # We find the exercise that have the maximum r_score in the category
+        max_r_score_exercice = Exercice.objects.filter(student=student, node__category=self.category, state=Exercice.State.ACTIVE).order_by('-r_score').first()
+        # If its r_score is above the threshold
+        if max_r_score_exercice.r_score > ExerciceLogic.ACTIVITY_DEACTIVATING_THRESHOLD and len(max_r_score_exercice.trials.all()) >= ExerciceLogic.MIN_NB_TRIALS_BEFORE_DEACTIVATING:
+            # We deactivate the exercise and all the easier ones in the same category
+            Exercice.objects.filter(student=student, node__category=self.category, node__difficulty__lte=max_r_score_exercice.node.difficulty).update(state=Exercice.State.DEACTIVATED)
+  
     def _convert_attempt_to_valid_input(attempt: str, type: Node.AnswerType) -> str:
         """
         Convert the attempt to a valid input
@@ -354,7 +410,6 @@ class ExerciceLogic:
             l = attempt.split(",")
             for i in range(len(l)):
                 l[i] = int(l[i])
-            print(f"Attemp {attempt} to list ===> {l}")
             return str(l)
         
         return str(attempt)
@@ -362,7 +417,7 @@ class ExerciceLogic:
     
     def try_question(self, question: dict, answer: str) -> dict:
         """
-        Let the user try a question, returns the trial and adds it to the self.previous_trials\n
+        Let the user try a question, returns the trial\n
         parameters:
             - question sous la forme {str(question), str(solution), str(answer_type)}
             - answer sous la forme str(answer)
@@ -375,26 +430,25 @@ class ExerciceLogic:
         trial = dict(question)
         trial['answer'] = ExerciceLogic._convert_attempt_to_valid_input(answer, question['answer_type'])
         trial['distance'] = ExerciceLogic.get_distance(trial) # WARNING this line is tricky and cause problems
-        print(f"Trial: {trial}")
 
         # On enregistre le trial dans la base de données
         Trial.objects.create(exercice=self.exercice, question=trial['question'], solution=trial['solution'], student_answer=trial['answer'], distance=trial['distance'])
-        self.previous_trials.append(trial)
 
         # On met à jour le r_score de l'exercice
-        self.update_r_score()
+        self.update_exercice_r_score()
+
+        # On met à jour le r_score de la catégorie de l'exercice
+        self.update_category_r_score()
 
         # On met à jour la qualité pour le type de l'exercice, ainsi que la qualité pour la difficulté correspondante
         self.update_qualities() # Besoin du r_score
 
-        # On met à jour les probabilités de chaque paramètre (category ET difficulty étant donné une category)
-        self.update_probabilities() # Besoin de la qualité
-
         # On met à jour la ZPD de l'étudiant
         self.update_zpd() # Besoin du r_score (en vrai c'est SR=Success Rate mais on simplifie)
 
-        # On sélectionne un nouvel exercice pour l'étudiant
-        self.set_current_exercice() # Besoin de la proba
+        # On met à jour les probabilités de chaque paramètre (category ET difficulty étant donné une category)
+        # Puis on met à jour l'exercice courant en fonction
+        self.update_current_exercice() # Besoin de la qualité
 
         return trial
 
