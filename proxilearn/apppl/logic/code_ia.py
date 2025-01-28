@@ -57,9 +57,9 @@ class ExerciceLogic:
         itemEasy = [1,2,5,10] #à lecture directe, c’est-à-dire si une pièce ou un billet de la valeur de ce montant existe
         itemDifficult = [3,4,6,7,8,9,11,12,13,14,15,16,17,18,19] #combiner plusieurs monnaie
         itemVeryDifficult = [] #combiner une pièce ou un billet avec une pièce de centime
-        for item in itemEasy :
-            for i in range (4):
-                itemVeryDifficult.append(item+change[i])
+        for k in range (19) :
+            for i in range (4,7):
+                itemVeryDifficult.append(k+change[i])
 
         def calculate_solution(price, change):
             # Calcule la solution en décomposant le prix avec les valeurs disponibles dans change.
@@ -138,84 +138,106 @@ class ExerciceLogic:
                 Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."""
 
             #vendre et rendre la monnaie d’un objet
-            case Node.Category.TypeR:
-                def generate_question_typeR(price, change, valid_items, answer_type):
-                    #Génère une question et une solution pour rendre la monnaie.
-                    change_valid = False
-                    while not change_valid:
-                        nb_item_select = random.choice([1, 2, 3])
-                        change_client = random.sample(change, nb_item_select)
-                        # Vérifier si le client a donné plus que le prix et si le rendu est valide
-                        if sum(change_client) >= price and (sum(change_client) - price) in valid_items:
-                            change_valid = True
-
-                    question = (
-                        f"""Tu es le marchand, rends la monnaie au client.\n
-                        Le jeu coûte {price}€ et le client t'a donné {list(map(str, change_client))}."""
-                    )
-                    solution = sum(change_client) - price
-                    return question, solution, answer_type
-
-                price = random.choice(itemEasy + itemDifficult)
-                
+            case Node.Category.TypeR:           
                 # Dans le match statement
+                price = random.choice(itemEasy + itemDifficult)
+                change_valid = False
+
                 match self.difficulty:
-                    case Node.Difficulty.EASY:
-                        question, solution, answer_type = generate_question_typeR(
-                            price, change, itemEasy, Node.AnswerType.INTEGER
-                        )
+                    case Node.Difficulty.EASY:    
+                        while not change_valid:
+                            change_client = random.choice(itemEasy + itemDifficult)
+                            # Vérifie si le client donne suffisamment et si le rendu est valide
+                            if change_client >= price and (change_client - price) in itemEasy:
+                                change_valid = True
+                        answer_type =  Node.AnswerType.INTEGER
+                        solution = change_client - price
 
                     case Node.Difficulty.HARD:
-                        question, solution, answer_type = generate_question_typeR(
-                            price, change, itemDifficult, Node.AnswerType.LIST
-                        )
+                        while not change_valid:
+                            items = itemEasy + itemDifficult
+                            change_client = random.choice(items)
+                            # Vérifie si le client donne suffisamment et si le rendu est valide
+                            if change_client >= price and (change_client - price) in itemDifficult:
+                                change_valid = True
+                            else :
+                                items.remove(change_client)
+                        
+                        rendu = change_client - price
+                        answer_type =  Node.AnswerType.LIST
+                        solution = calculate_solution(rendu, change)
                     
                     case Node.Difficulty.VERYHARD:
-                            question, solution, answer_type = generate_question_typeR(
-                                price, change, itemVeryDifficult, Node.AnswerType.LIST
-                            )
+                        while not change_valid:
+                            items = itemVeryDifficult
+                            change_client = random.choice(items)
+                            print(f"change_client{change_client}")
+                            # Vérifie si le client donne suffisamment et si le rendu est valide
+                            if change_client >= price and (change_client - price) in itemVeryDifficult:
+                                change_valid = True
+                            else :
+                                items.remove(change_client)
+                            
+                        rendu = change_client - price
+                        answer_type =  Node.AnswerType.LIST
+                        solution = calculate_solution(rendu, change)
 
-            
+                question = (f"""Tu es le marchand, rends la monnaie au client.\n
+                Le premier article coûte {price}€.\n
+                Le client t'a donné {change_client}."""
+                )
+                
             #vendre et rendre la monnaie de deux objets
             case Node.Category.TypeRM:              
-                def generate_multi_item_change_question(priceA, priceB, change, valid_items, answer_type):
-                    #Génère une question et une solution pour rendre la monnaie lorsqu'il y a plusieurs articles.
-                    change_valid = False
-                    total_price = priceA + priceB
-                    while not change_valid:
-                        nb_item_select = random.choice([1, 2, 3])
-                        change_client = random.sample(change, nb_item_select)
-                        # Vérifie si le client donne suffisamment et si le rendu est valide
-                        if sum(change_client) >= total_price and (sum(change_client) - total_price) in valid_items:
-                            change_valid = True
-
-                    question = (
-                        f"""Tu es le marchand, rends la monnaie au client.\n
-                        Le premier article coûte {priceA}€.\n
-                        Le deuxième article coûte {priceB}€.\n
-                        Le client t'a donné {list(map(str, change_client))}."""
-                    )
-                    solution = sum(change_client) - total_price
-                    return question, solution, answer_type
-
                 priceA = random.choice(itemEasy + itemDifficult)
                 priceB = random.choice(itemEasy + itemDifficult)
-                # Dans le match statement
+                price = priceA + priceB
+                change_valid = False
+
                 match self.difficulty:
-                    case Node.Difficulty.EASY:
-                        question, solution, answer_type = generate_multi_item_change_question(
-                            priceA, priceB, change, itemEasy, Node.AnswerType.INTEGER
-                        )
+                    case Node.Difficulty.EASY:    
+                        while not change_valid:
+                            change_client = random.choice(itemEasy + itemDifficult)
+                            # Vérifie si le client donne suffisamment et si le rendu est valide
+                            if change_client >= price and (change_client - price) in itemEasy:
+                                change_valid = True
+                        answer_type =  Node.AnswerType.INTEGER
+                        solution = change_client - price
 
                     case Node.Difficulty.HARD:
-                        question, solution, answer_type = generate_multi_item_change_question(
-                            priceA, priceB, change, itemDifficult, Node.AnswerType.LIST
-                        )
-
+                        while not change_valid:
+                            items = itemEasy + itemDifficult
+                            change_client = random.choice(items)
+                            # Vérifie si le client donne suffisamment et si le rendu est valide
+                            if change_client >= price and (change_client - price) in itemDifficult:
+                                change_valid = True
+                            else :
+                                items.remove(change_client)
+                        
+                        rendu = change_client - price
+                        answer_type =  Node.AnswerType.LIST
+                        solution = calculate_solution(rendu, change)
+                    
                     case Node.Difficulty.VERYHARD:
-                        question, solution, answer_type = generate_multi_item_change_question(
-                            priceA, priceB, change, itemVeryDifficult, Node.AnswerType.LIST
-                        )
+                        while not change_valid:
+                            items = itemVeryDifficult
+                            change_client = random.choice(items)
+                            print(f"change_client{change_client}")
+                            # Vérifie si le client donne suffisamment et si le rendu est valide
+                            if change_client >= price and (change_client - price) in itemVeryDifficult:
+                                change_valid = True
+                            else :
+                                items.remove(change_client)
+                            
+                        rendu = change_client - price
+                        answer_type =  Node.AnswerType.LIST
+                        solution = calculate_solution(rendu, change)
+                        
+                question = (f"""Tu es le marchand, rends la monnaie au client.\n
+                Le premier article coûte {priceA}€.\n
+                Le deuxième article coûte {priceB}€.\n
+                Le client t'a donné {change_client}."""
+                )
 
 
         return {'question':question, 'solution':solution, 'answer_type':answer_type}
