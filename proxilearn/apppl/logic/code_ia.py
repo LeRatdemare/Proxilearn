@@ -95,7 +95,8 @@ class ExerciceLogic:
                         solution = calculate_solution(price, change)
                         
                 question = f"""Tu es le client, paie ce que tu dois au marchand avec 
-                les pièces et les billets. Le jeu coûte {price}€."""
+                les pièces et les billets. \n 
+                L'article que tu souhaites acheter coûte {price}€."""
             
             #acheter et payer deux objets
             case Node.Category.TypeMM:
@@ -123,18 +124,17 @@ class ExerciceLogic:
                                 price_valid = True
 
                         solution = calculate_solution(price, change)
-
+                        answer_type = Node.AnswerType.LIST
                     
                     case Node.Difficulty.VERYHARD:
-                        price_valid = False
-                        while (price_valid == False) :
-                            priceA = random.choice(itemVeryDifficult)
-                            priceB = random.choice(change[:,3])
-
+                        priceA = random.choice(itemVeryDifficult)
+                        priceB = random.choice(itemEasy+itemDifficult)
+                        price = priceA +priceB
                         solution = calculate_solution(price, change)
+                        answer_type = Node.AnswerType.LIST
 
 
-                question = f"""Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. 
+                question = f"""Tu es le client, paie ce que tu dois au marchand avec les pièces et les billets. \n
                 Le premier article coûte {priceA}€. Le deuxième article coûte {priceB}€."""
 
             #vendre et rendre la monnaie d’un objet
@@ -239,7 +239,12 @@ class ExerciceLogic:
                 Le client t'a donné {change_client}."""
                 )
 
-
+        try:
+            for i, el in enumerate(solution):
+                solution[i]=float(el)
+        except:
+            print("solution n'est pas une liste")
+            solution = float(solution)
         return {'question':question, 'solution':solution, 'answer_type':answer_type}
     
     def get_distance(trial: dict) -> int:
@@ -427,10 +432,10 @@ class ExerciceLogic:
         if type == Node.AnswerType.LIST:
             l = attempt.split(",")
             for i in range(len(l)):
-                l[i] = int(l[i])
+                l[i] = float(l[i])
             return str(l)
         
-        return str(attempt)
+        return str(float(attempt))
 
     
     def try_question(self, question: dict, answer: str) -> dict:

@@ -4,22 +4,21 @@
 <h2>Exercices {% if user %}disponibles ({{ user }}){% else %}existants{% endif %}</h2>
 <ul>
     {% if user %}
-    {% for exercice in exercices %}
-        {% if exercice.state == "A" %}
-        <li>{{ exercice.node }} | <a href="{% url "exercice" exercice.node.id user.id %}">try it as {{ user }}</a></li>
-        {% endif %}
-    {% endfor %}
+        {% for exercice in exercices %}
+            {% if exercice.state == "A" %}
+            <li>{{ exercice.node }}</li>
+            {% endif %}
+        {% endfor %}
+        <form method="get" action="{% url 'exercice' user.id %}">
+            {% csrf_token %}
+            <button type="submit">Go to Exercice</button>
+        </form>
     {% else %}
     {% for node in nodes %}
         <li>{{ node }}</li>
     {% endfor %}
     {% endif %}
 </ul>
-
-<form method="get" action="{% url 'exercice' user.id %}">
-    {% csrf_token %}
-    <button type="submit">Go to Exercice</button>
-</form>
 
 <h2>Etudiants</h2>
 <ul>

@@ -1,3 +1,167 @@
+/* Général */
+body {
+    font-family: Verdana, sans-serif;
+    line-height: 1.6;
+    background-color: #f8f9fa;
+    /* Couleur de fond légère */
+    color: #333;
+    /* Couleur du texte */
+    margin: 0;
+    padding: 0;
+}
+
+/* En-tête principal */
 h1 {
-    color: red;
+    font-size: 2.5rem;
+    text-align: center;
+    margin: 20px 0;
+    color: #007bff;
+    /* Bleu Bootstrap */
+}
+
+/* Paragraphes */
+p {
+    font-size: 1.1rem;
+    margin: 10px 20px;
+    text-align: justify;
+}
+
+.intro {
+    text-align: center;
+}
+
+/* Bouton de déconnexion */
+.btn-logout {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-logout:hover {
+    background-color: #c82333;
+}
+
+/* Bouton de validation */
+.btn-validate {
+    background-color: #00a92a;
+    /* Rouge Bootstrap */
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-validate:hover {
+    background-color: #018121;
+}
+
+/* Lien de connexion */
+a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 20px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Section centralisée */
+#block_central {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 800px;
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    p {
+        font-size: 1rem;
+    }
+
+    button {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+}
+
+/* Style du champ de saisie de réponse */
+.input-answer {
+    width: 100%;
+    /* Prend toute la largeur disponible */
+    padding: 12px 15px;
+    /* Espacement interne */
+    margin: 10px 0;
+    /* Marges autour de l'input */
+    font-size: 1rem;
+    /* Taille de la police */
+    border: 2px solid #007bff;
+    /* Bordure bleue */
+    border-radius: 5px;
+    /* Coins arrondis */
+    background-color: #f8f9fa;
+    /* Couleur de fond légère */
+    color: #495057;
+    /* Couleur du texte */
+    transition: border-color 0.3s, background-color 0.3s;
+    /* Transition douce pour les changements */
+}
+
+/* Changement de couleur au focus */
+.input-answer:focus {
+    border-color: #28a745;
+    /* Bordure verte au focus */
+    background-color: #ffffff;
+    /* Fond blanc au focus */
+    outline: none;
+    /* Retirer le contour par défaut */
+}
+
+/* Style lorsque l'input est vide */
+.input-answer::placeholder {
+    color: #6c757d;
+    /* Couleur grise pour le texte du placeholder */
+    font-style: italic;
+    /* Italique pour le placeholder */
+}
+
+.coin-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.coin {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.coin:hover {
+    transform: scale(1.1);
+}
+
+.result {
+    margin-top: 20px;
+    font-size: 1.2rem;
 }

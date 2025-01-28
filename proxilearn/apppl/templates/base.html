@@ -10,19 +10,18 @@
         {% if user.is_authenticated %}
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
-                <button type="submit">Logout</button>
+                <button class="btn-logout" type="submit">Logout</button>
             </form>
         {% else %}
             <a href="{% url 'login' %}">Login</a>
         {% endif %}
         <h1>ProxiLearn</h1>
-        <p>Welcome to ProxiLearn, the online learning platform for professionals.</p>
-        <p>ProxiLearn is a platform that allows professionals to learn new skills and knowledge in a flexible and convenient way. Our courses are designed to help you develop your skills and knowledge in a wide range of areas, from business and management to technology and design.</p>
-        <p>Whether you are looking to advance your career, learn new skills, or simply explore new topics, ProxiLearn has something for you. Our courses are taught by industry experts and are designed to be engaging, interactive, and practical.</p>
-        <p>So why wait? Sign up for a course today and start learning with ProxiLearn!</p>
+        <p class="intro">Bienvenue sur la plateforme ProxiLearn !</p>
+        <p class="intro">Essaie de t'améliorer en rélaisant les exercices qui te sont proposés</p>
         <div id='block_central'>
             {% block content %}{% endblock %}
             <br/>
         </div>
+        <script src="{% static 'js/script.js' %}"></script>
     </body>
 </html>
