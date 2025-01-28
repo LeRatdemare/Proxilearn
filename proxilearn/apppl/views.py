@@ -66,15 +66,21 @@ def exercice(request, student_id):
             trial = exercice_logic.try_question(question, student_answer)
             print(f"Essai: {trial}")
 
-        question = exercice_logic.generate_question()
+            ## On sélectionne le prochain exercice qui a peut-être changé
+            exercice = Exercice.objects.get(student=student, is_current=True)
+            node = Node.objects.get(pk=exercice.node_id)
+            if exercice.state != Exercice.State.ACTIVE:
+                return redirect('index')
+            exercice_logic = ExerciceLogic(node=node, student=student)
 
+        # On génère une nouvelle question
+        question = exercice_logic.generate_question()
         context = {
             'node': node,
             'student': student,
             'question': question,
             'user': user,
         }
-
         return render(request, 'exercice.html', context=context)
 
 def reset_all(request):
