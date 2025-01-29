@@ -9,7 +9,7 @@ class NodeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 class ExerciceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'state', 'node', 'student', 'r_score', 'quality', 'is_current')
+    list_display = ('id', 'state', 'node', 'student', 'trial_count','r_score', 'quality', 'is_current')
     search_fields = ['state', 'node', 'student']
 
 class TrialAdmin(admin.ModelAdmin):

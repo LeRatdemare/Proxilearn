@@ -78,8 +78,12 @@ class Exercice(models.Model):
     node = models.ForeignKey(Node, on_delete=models.PROTECT, related_name='exercices')
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exercices')
 
+    def trial_count(self):
+        return self.trials.count()
+    trial_count.short_description = 'Number of Trials'
+    
     def __str__(self):
-        return f"Exo{self.id} ==> {self.state}"
+        return f"{self.node.category}{self.node.difficulty}"
 
 class Trial(models.Model):
     id = models.AutoField(primary_key=True)

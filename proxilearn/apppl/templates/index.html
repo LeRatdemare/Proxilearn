@@ -6,21 +6,21 @@
     {% if user %}
         {% for exercice in exercices %}
             {% if exercice.state == "A" %}
-            <li>{{ exercice.node }}</li>
+            <li>{{ exercice }} : {{ exercice.trial_count}} tentatives</li>
             {% endif %}
         {% endfor %}
-        <form method="get" action="{% url 'exercice' user.id %}">
-            {% csrf_token %}
-            <button type="submit">Go to Exercice</button>
-        </form>
     {% else %}
     {% for node in nodes %}
         <li>{{ node }}</li>
     {% endfor %}
     {% endif %}
 </ul>
+<form method="get" action="{% url 'exercice' user.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn-keep-learning">Continue learning</button>
+</form>
 
-<h2>Etudiants</h2>
+<h2>Etudiants inscrits</h2>
 <ul>
     {% for student in students %}
         <li>{{ student }} - n°{{student.id}} </li>
@@ -28,6 +28,12 @@
 </ul>
 
 {% if user.is_superuser %}
+<br/><hr/><br/>
+    <h2>Réinitialisation base de données</h2>
+    <form action="{% url 'reset_all' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn-clear">BOOUUUUM</button>
+    </form><br/>
     <h2>Formulaire pour ajouter un exercice</h2>
     <form action="/" method="post">
         {% csrf_token %}
@@ -43,12 +49,5 @@
         {{ formulaire_student.as_p }}
         <button type="submit">Ajouter</button>
     </form>
-
-    <h2>Bombe nucléaire</h2>
-    <form action="{% url 'reset_all' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">BOOUUUUM</button>
-    </form>
 {% endif %}
-
 {% endblock %}

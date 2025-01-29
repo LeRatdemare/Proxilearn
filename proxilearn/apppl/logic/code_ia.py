@@ -7,7 +7,6 @@ from datetime import datetime
 class ExerciceLogic:
 
     EXERCICES = [] # [ex1, ex2,...] on pourra appliquer prvious_trials
-    FENETRE_D = 10
     OLD_REWARDS_IMPORTANCE = 0.5
     EXPLORATION_RATE = 0.1
     ZPD_EXERCISE_EXPANSION_THRESHOLD = 0.65
@@ -55,23 +54,28 @@ class ExerciceLogic:
         question = {"question": str(), "solution": str(), "answer_type": str()}
         change = [10,5,2,1,0.5,0.2,0.1] #pièces et billets disponibles
         itemEasy = [1,2,5,10] #à lecture directe, c’est-à-dire si une pièce ou un billet de la valeur de ce montant existe
-        itemDifficult = [3,4,6,7,8,9,11,12,13,14,15,16,17,18,19] #combiner plusieurs monnaie
-        itemVeryDifficult = [] #combiner une pièce ou un billet avec une pièce de centime
+        itemHard = [3,4,6,7,8,9,11,12,13,14,15,16,17,18,19] #combiner plusieurs monnaie
+        itemVeryHard = [] #combiner une pièce ou un billet avec une pièce de centime
         for k in range (19) :
             for i in range (4,7):
-                itemVeryDifficult.append(k+change[i])
+                itemVeryHard.append(k+change[i])
 
-        def calculate_solution(price, change):
+        def calculate_solution(price: float, change):
             # Calcule la solution en décomposant le prix avec les valeurs disponibles dans change.
+            print(f"Calculating solution for price {price}")
             solution = []
-            left_to_pay = price
+            left_to_pay: float = price
             i = 0
             while i < len(change) and left_to_pay > 0:
                 if left_to_pay - change[i] >= 0:
                     left_to_pay -= change[i]
+                    # On arrondi au dixième près
+                    left_to_pay = round(left_to_pay, 1)
                     solution.append(change[i])
+                    print(f"left_to_pay={left_to_pay} ; solution={solution}")
                 else:
                     i += 1  # Passe à une valeur plus petite si la valeur actuelle est trop grande
+                    print(f"i={i}")
             return solution
 
         match self.category:
@@ -84,13 +88,13 @@ class ExerciceLogic:
                        answer_type = Node.AnswerType.INTEGER
 
                     case Node.Difficulty.HARD:
-                        price = random.choice(itemDifficult)
+                        price = random.choice(itemHard)
                         print(f"Price: {price}")
                         answer_type = Node.AnswerType.LIST
                         solution = calculate_solution(price, change)
 
                     case Node.Difficulty.VERYHARD:
-                        price = random.choice(itemVeryDifficult)
+                        price = random.choice(itemVeryHard)
                         answer_type = Node.AnswerType.LIST
                         solution = calculate_solution(price, change)
                         
@@ -105,8 +109,8 @@ class ExerciceLogic:
                         #vérifier la validité du prix, cad si la somme des deux appartient à la liste itemEasy
                         price_valid = False
                         while (price_valid == False) :
-                            priceA = random.choice(itemEasy+itemDifficult)
-                            priceB = random.choice(itemEasy+itemDifficult)
+                            priceA = random.choice(itemEasy+itemHard)
+                            priceB = random.choice(itemEasy+itemHard)
                             if (priceA+priceB) in itemEasy:
                                 price = priceA+priceB
                                 price_valid = True
@@ -117,9 +121,9 @@ class ExerciceLogic:
                         #vérifier la validité du prix, cad si la somme des deux appartient à la liste itemDifficult
                         price_valid = False
                         while (price_valid == False) :
-                            priceA = random.choice(itemEasy+itemDifficult)
-                            priceB = random.choice(itemEasy+itemDifficult)
-                            if (priceA+priceB) in itemDifficult:
+                            priceA = random.choice(itemEasy+itemHard)
+                            priceB = random.choice(itemEasy+itemHard)
+                            if (priceA+priceB) in itemHard:
                                 price = priceA+priceB
                                 price_valid = True
 
@@ -127,8 +131,8 @@ class ExerciceLogic:
                         answer_type = Node.AnswerType.LIST
                     
                     case Node.Difficulty.VERYHARD:
-                        priceA = random.choice(itemVeryDifficult)
-                        priceB = random.choice(itemEasy+itemDifficult)
+                        priceA = random.choice(itemVeryHard)
+                        priceB = random.choice(itemEasy+itemHard)
                         price = priceA +priceB
                         solution = calculate_solution(price, change)
                         answer_type = Node.AnswerType.LIST
@@ -140,103 +144,62 @@ class ExerciceLogic:
             #vendre et rendre la monnaie d’un objet
             case Node.Category.TypeR:           
                 # Dans le match statement
-                price = random.choice(itemEasy + itemDifficult)
+                price = random.choice(itemEasy + itemHard)
                 change_valid = False
 
                 match self.difficulty:
-                    case Node.Difficulty.EASY:    
-                        while not change_valid:
-                            change_client = random.choice(itemEasy + itemDifficult)
-                            # Vérifie si le client donne suffisamment et si le rendu est valide
-                            if change_client >= price and (change_client - price) in itemEasy:
-                                change_valid = True
+                    case Node.Difficulty.EASY:
+                        solution = random.choice(itemEasy)
                         answer_type =  Node.AnswerType.INTEGER
-                        solution = change_client - price
+                        change_client = price + solution
 
                     case Node.Difficulty.HARD:
-                        while not change_valid:
-                            items = itemEasy + itemDifficult
-                            change_client = random.choice(items)
-                            # Vérifie si le client donne suffisamment et si le rendu est valide
-                            if change_client >= price and (change_client - price) in itemDifficult:
-                                change_valid = True
-                            else :
-                                items.remove(change_client)
-                        
-                        rendu = change_client - price
+                        rendu = random.choice(itemHard)
                         answer_type =  Node.AnswerType.LIST
+                        change_client = price + rendu
                         solution = calculate_solution(rendu, change)
+
                     
                     case Node.Difficulty.VERYHARD:
-                        while not change_valid:
-                            items = itemVeryDifficult
-                            change_client = random.choice(items)
-                            print(f"change_client{change_client}")
-                            # Vérifie si le client donne suffisamment et si le rendu est valide
-                            if change_client >= price and (change_client - price) in itemVeryDifficult:
-                                change_valid = True
-                            else :
-                                items.remove(change_client)
-                            
-                        rendu = change_client - price
+                        rendu = random.choice(itemVeryHard)
                         answer_type =  Node.AnswerType.LIST
+                        change_client = price + rendu
                         solution = calculate_solution(rendu, change)
 
                 question = (f"""Tu es le marchand, rends la monnaie au client.\n
                 Le premier article coûte {price}€.\n
-                Le client t'a donné {change_client}."""
+                Le client t'a donné {change_client}€."""
                 )
                 
             #vendre et rendre la monnaie de deux objets
             case Node.Category.TypeRM:              
-                priceA = random.choice(itemEasy + itemDifficult)
-                priceB = random.choice(itemEasy + itemDifficult)
+                priceA = random.choice(itemEasy + itemHard)
+                priceB = random.choice(itemEasy + itemHard)
                 price = priceA + priceB
                 change_valid = False
 
                 match self.difficulty:
-                    case Node.Difficulty.EASY:    
-                        while not change_valid:
-                            change_client = random.choice(itemEasy + itemDifficult)
-                            # Vérifie si le client donne suffisamment et si le rendu est valide
-                            if change_client >= price and (change_client - price) in itemEasy:
-                                change_valid = True
+                    case Node.Difficulty.EASY:
                         answer_type =  Node.AnswerType.INTEGER
-                        solution = change_client - price
+                        solution = random.choice(itemEasy)
+                        change_client = price + solution
 
                     case Node.Difficulty.HARD:
-                        while not change_valid:
-                            items = itemEasy + itemDifficult
-                            change_client = random.choice(items)
-                            # Vérifie si le client donne suffisamment et si le rendu est valide
-                            if change_client >= price and (change_client - price) in itemDifficult:
-                                change_valid = True
-                            else :
-                                items.remove(change_client)
-                        
-                        rendu = change_client - price
                         answer_type =  Node.AnswerType.LIST
+                        rendu = random.choice(itemHard)
+                        change_client = price + rendu
                         solution = calculate_solution(rendu, change)
                     
                     case Node.Difficulty.VERYHARD:
-                        while not change_valid:
-                            items = itemVeryDifficult
-                            change_client = random.choice(items)
-                            print(f"change_client{change_client}")
-                            # Vérifie si le client donne suffisamment et si le rendu est valide
-                            if change_client >= price and (change_client - price) in itemVeryDifficult:
-                                change_valid = True
-                            else :
-                                items.remove(change_client)
-                            
-                        rendu = change_client - price
                         answer_type =  Node.AnswerType.LIST
+                        rendu = random.choice(itemVeryHard)
+                        change_client = price + rendu
                         solution = calculate_solution(rendu, change)
                         
                 question = (f"""Tu es le marchand, rends la monnaie au client.\n
                 Le premier article coûte {priceA}€.\n
                 Le deuxième article coûte {priceB}€.\n
-                Le client t'a donné {change_client}."""
+                Le client t'a donné {change_client}€."""
                 )
 
         try:
@@ -269,7 +232,7 @@ class ExerciceLogic:
         return: la progression de l’apprentissage, r
         """
         r=0
-        d = ExerciceLogic.FENETRE_D
+        d = ExerciceLogic.MIN_NB_TRIALS_BEFORE_DEACTIVATING
         C=[]
         previous_trials = self.exercice.trials.all().order_by('datetime')
         print(f"Calculation of r_score for exercice {self.exercice} with {len(previous_trials)} previous trials")
@@ -299,7 +262,7 @@ class ExerciceLogic:
         print(f"Calculation of r_score for category {self.category} with {len(trials)} previous trials")
         # We calculate the r_score for the category
         r_score = 0
-        d = ExerciceLogic.FENETRE_D
+        d = ExerciceLogic.MIN_NB_TRIALS_BEFORE_DEACTIVATING
         C = []
         for trial in trials:
             distance = trial.distance

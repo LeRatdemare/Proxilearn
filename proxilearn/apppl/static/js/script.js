@@ -1,3 +1,4 @@
+// Ici on a accès à la variable answerType qui contient le type de réponse attendu
 const coin = document.querySelectorAll('.coin');
 const sortedListElement = document.getElementById('sorted-list');
 const selectedValuesInput = document.getElementById('inputText');
@@ -8,6 +9,9 @@ coin.forEach(coin => {
     // Récupérer la valeur associée à l'image
     const value = parseFloat(coin.getAttribute('data-value'));
 
+    if (answerType === 'I' || answerType === 'T') {
+      clearInput();
+    }
     // Ajouter la valeur à la liste
     selectedValues.push(value);
 
@@ -20,3 +24,9 @@ coin.forEach(coin => {
     selectedValuesInput.value = selectedValues.join(',');
   });
 });
+
+function clearInput() {
+  selectedValues = [];
+  sortedListElement.textContent = '';
+  selectedValuesInput.value = '';
+}

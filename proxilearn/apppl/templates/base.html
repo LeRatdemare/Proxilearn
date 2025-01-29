@@ -22,6 +22,15 @@
             {% block content %}{% endblock %}
             <br/>
         </div>
-        <script src="{% static 'js/script.js' %}"></script>
+        <!-- Ajoutez ce script pour forcer le défilement vers le haut -->
+        <script>
+            window.onload = function() {
+                window.scrollTo({
+                    top: 0,
+                    left: 0,
+                    behavior: "smooth",
+                  });
+            }
+        </script>
     </body>
 </html>
