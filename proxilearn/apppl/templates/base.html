@@ -18,6 +18,13 @@
         <h1>ProxiLearn</h1>
         <p class="intro">Bienvenue sur la plateforme ProxiLearn !</p>
         <p class="intro">Essaie de t'améliorer en rélaisant les exercices qui te sont proposés</p>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <div id='block_central'>
             {% block content %}{% endblock %}
             <br/>

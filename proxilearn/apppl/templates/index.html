@@ -15,10 +15,12 @@
     {% endfor %}
     {% endif %}
 </ul>
+{% if user %}
 <form method="get" action="{% url 'exercice' user.id %}">
     {% csrf_token %}
     <button type="submit" class="btn-keep-learning">Continue learning</button>
 </form>
+{% endif %}
 
 <h2>Etudiants inscrits</h2>
 <ul>

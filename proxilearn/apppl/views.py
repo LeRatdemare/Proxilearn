@@ -3,6 +3,7 @@ from apppl.models import Node, Student, Exercice, Trial
 from apppl.models import generate_default_qualities, generate_default_r_scores
 from apppl.forms import NodeForm, RegisterForm
 from apppl.logic.code_ia import *
+from django.contrib import messages
 
 # Create your views here.
 def index(request):
@@ -65,6 +66,9 @@ def exercice(request, student_id):
             # On crée un essai
             trial = exercice_logic.try_question(question, student_answer)
             print(f"Essai: {trial}")
+            nb_attemps_for_exercice = Trial.objects.filter(exercice=exercice).count()
+            nb_success_for_exercice = Trial.objects.filter(exercice=exercice, distance=0).count()
+            messages.add_message(request, messages.INFO, f"Tu as {"réussi" if trial['distance']==0 else "échoué"} l'exercice {exercice}. (Score sur l'exercice : {nb_success_for_exercice}/{nb_attemps_for_exercice})")
 
             ## On sélectionne le prochain exercice qui a peut-être changé
             exercice = Exercice.objects.get(student=student, is_current=True)
